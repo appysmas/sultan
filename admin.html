@@ -446,6 +446,34 @@
     return msg === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : msg;
   }
 
+  // ---------------- KOMPRESI GAMBAR OTOMATIS (JPG/PNG > batas) ----------------
+  async function compressImageIfNeeded(file, maxBytes = 9 * 1024 * 1024, onStatus){
+    if(!file.type.startsWith("image/")) return file; // hanya untuk gambar
+    if(file.size <= maxBytes) return file; // sudah cukup kecil
+
+    if(onStatus) onStatus("Mengompres gambar...");
+    const bitmap = await createImageBitmap(file);
+    let { width, height } = bitmap;
+    let quality = 0.85;
+    let scale = 1;
+    let bestBlob = null;
+
+    for(let i = 0; i < 9; i++){
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", quality));
+      bestBlob = blob;
+      if(blob.size <= maxBytes) break;
+      if(quality > 0.5) quality -= 0.12; else scale = Math.max(0.3, scale - 0.15);
+    }
+
+    const newName = file.name.replace(/\.\w+$/, "") + "-compressed.jpg";
+    return new File([bestBlob], newName, { type: "image/jpeg" });
+  }
+
   // ---------------- MODAL: KONFIRMASI PASSWORD ----------------
   function askPasswordConfirm(label){
     return new Promise((resolve) => {
@@ -618,12 +646,22 @@
     const file = $("docFile").files[0];
     if(!title || !file){ toast("Judul dan berkas wajib diisi.", true); return; }
 
+    const isImage = file.type.startsWith("image/");
+    if(!isImage && file.size > 10 * 1024 * 1024){
+      toast(`File PDF/DOCX ini ${(file.size/1024/1024).toFixed(1)}MB, melebihi batas 10MB dan tidak bisa dikompres otomatis di browser. Kirim ke Claude dulu untuk dikompres, baru unggah ulang.`, true);
+      return;
+    }
+
     $("docUploadBtn").disabled = true;
-    $("docUploadBtn").textContent = "Mengunggah...";
+    $("docUploadBtn").textContent = "Memproses...";
     setProgress("docProgressWrap","docProgressFill","docProgressLabel", 0);
     try{
+      const fileToUpload = await compressImageIfNeeded(file, 9.5 * 1024 * 1024, (status) => {
+        $("docUploadBtn").textContent = status;
+      });
+      $("docUploadBtn").textContent = "Mengunggah...";
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", fileToUpload);
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
       const result = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
@@ -634,7 +672,7 @@
       await withTimeout(
         addDoc(collection(db, "documents"), {
           title, category, number, date,
-          fileURL: result.secure_url, fileName: file.name, cloudinaryId: result.public_id,
+          fileURL: result.secure_url, fileName: fileToUpload.name, cloudinaryId: result.public_id,
           uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
@@ -710,11 +748,15 @@
     if(!file){ toast("Pilih gambar terlebih dahulu.", true); return; }
 
     $("galUploadBtn").disabled = true;
-    $("galUploadBtn").textContent = "Mengunggah...";
+    $("galUploadBtn").textContent = "Memproses...";
     setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0);
     try{
+      const fileToUpload = await compressImageIfNeeded(file, 4 * 1024 * 1024, (status) => {
+        $("galUploadBtn").textContent = status;
+      });
+      $("galUploadBtn").textContent = "Mengunggah...";
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", fileToUpload);
       const json = await uploadWithProgress(
         `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
         formData,
