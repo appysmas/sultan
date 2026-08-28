@@ -35,11 +35,11 @@
   .login-box p.sub{font-size:0.85rem;color:var(--ink-600);margin:0 0 26px;}
   .field{margin-bottom:16px;}
   .field label{display:block;font-size:0.78rem;font-weight:600;margin-bottom:6px;color:var(--teal-900);}
-  .field input{
+  .field input,.field select{
     width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:2px;
     font-size:0.92rem;background:#fff;
   }
-  .field input:focus{outline:2px solid var(--gold-400);outline-offset:1px;border-color:var(--gold-500);}
+  .field input:focus,.field select:focus{outline:2px solid var(--gold-400);outline-offset:1px;border-color:var(--gold-500);}
   .btn{
     width:100%;background:var(--teal-950);color:var(--cream-100);border:none;
     padding:13px;font-weight:700;font-size:0.9rem;border-radius:2px;margin-top:6px;
@@ -103,20 +103,20 @@
   }
   .action-btn.danger{color:var(--danger);border-color:#f0cfc6;}
   .action-btn:hover{background:var(--cream-200);}
-  a.dl-link{color:var(--teal-700);font-weight:600;text-decoration:none;}
+  a.dl-link{color:var(--teal-700);font-weight:600;text-decoration:none;margin-right:10px;}
   a.dl-link:hover{text-decoration:underline;}
 
   .section-title{font-size:1.15rem;color:var(--teal-950);margin:0 0 18px;font-family:'Amiri',serif;}
   .gal-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
   .gal-admin-item{border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff;}
-  .gal-admin-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+  .gal-admin-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer;}
   .gal-admin-item .meta{padding:10px 12px;}
   .gal-admin-item .meta p{margin:0 0 8px;font-size:0.78rem;color:var(--ink-600);}
 
   .toast{
     position:fixed;bottom:24px;right:24px;background:var(--teal-950);color:var(--cream-100);
     padding:14px 20px;border-radius:2px;font-size:0.85rem;box-shadow:0 10px 30px rgba(0,0,0,0.25);
-    display:none;z-index:100;max-width:320px;
+    display:none;z-index:200;max-width:320px;
   }
   .toast.show{display:block;}
   .toast.err{background:var(--danger);}
@@ -124,17 +124,46 @@
   /* ---------- PROGRESS BAR ---------- */
   .progress-wrap{display:none;margin:14px 0;}
   .progress-wrap.show{display:block;}
-  .progress-track{
-    width:100%;height:8px;background:var(--cream-200);border-radius:999px;overflow:hidden;
+  .progress-track{width:100%;height:8px;background:var(--cream-200);border-radius:999px;overflow:hidden;}
+  .progress-fill{height:100%;width:0%;background:var(--gold-500);border-radius:999px;transition:width 0.15s ease;}
+  .progress-label{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--teal-900);margin-top:6px;display:block;}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(8,33,31,0.65);display:none;
+    align-items:center;justify-content:center;z-index:150;padding:20px;
   }
-  .progress-fill{
-    height:100%;width:0%;background:var(--gold-500);border-radius:999px;
-    transition:width 0.15s ease;
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--cream-100);border-radius:2px;padding:30px;width:100%;max-width:380px;
+    box-shadow:0 30px 60px rgba(0,0,0,0.35);
   }
-  .progress-label{
-    font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--teal-900);
-    margin-top:6px;display:block;
+  .modal-box h3{margin:0 0 8px;font-size:1.1rem;color:var(--teal-950);font-family:'Amiri',serif;}
+  .modal-box p.desc{font-size:0.85rem;color:var(--ink-600);margin:0 0 18px;}
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .modal-actions .btn{margin-top:0;}
+  .modal-actions .btn.cancel{background:none;border:1px solid var(--line);color:var(--ink-600);}
+  .modal-actions .btn.cancel:hover{background:var(--cream-200);}
+  .modal-actions .btn.confirm-danger{background:var(--danger);}
+  .modal-actions .btn.confirm-danger:hover{background:#932f20;}
+
+  .preview-overlay{
+    position:fixed;inset:0;background:rgba(8,33,31,0.9);display:none;
+    align-items:center;justify-content:center;z-index:150;padding:24px;
   }
+  .preview-overlay.show{display:flex;flex-direction:column;}
+  .preview-topbar{
+    display:flex;justify-content:space-between;align-items:center;color:var(--cream-100);
+    max-width:900px;width:100%;margin:0 auto 12px;font-size:0.85rem;
+  }
+  .preview-close{background:none;border:1px solid rgba(250,246,236,0.35);color:var(--cream-100);padding:8px 16px;border-radius:2px;}
+  .preview-close:hover{border-color:var(--gold-400);color:var(--gold-400);}
+  .preview-body{
+    background:#fff;max-width:900px;width:100%;margin:0 auto;flex:1;overflow:auto;
+    border-radius:2px;display:flex;align-items:center;justify-content:center;
+  }
+  .preview-body img{max-width:100%;max-height:80vh;display:block;}
+  .preview-body iframe{width:100%;height:80vh;border:none;}
 
   @media (max-width:700px){
     .topbar .who span.uid{display:none;}
@@ -160,7 +189,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.3-force-longpolling</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.4-fitur-lengkap</p>
   </div>
 </div>
 
@@ -178,6 +207,8 @@
     <button class="tab-btn active" data-tab="statistik">Statistik Pengunjung</button>
     <button class="tab-btn" data-tab="inventaris">Inventaris Surat &amp; Dokumen</button>
     <button class="tab-btn" data-tab="galeri">Galeri Foto</button>
+    <button class="tab-btn" data-tab="berita">Berita &amp; Liputan</button>
+    <button class="tab-btn" data-tab="pengaturan">Pengaturan</button>
   </div>
 
   <!-- ---- PANEL: STATISTIK ---- -->
@@ -203,7 +234,7 @@
       <div class="form-grid">
         <div class="field"><label>Judul / Perihal</label><input type="text" id="docTitle" placeholder="Contoh: Surat Undangan Rapat"></div>
         <div class="field"><label>Kategori</label>
-          <select id="docCategory" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:2px;background:#fff;">
+          <select id="docCategory">
             <option>Surat Masuk</option>
             <option>Surat Keluar</option>
             <option>Legalitas</option>
@@ -239,6 +270,7 @@
   <div class="panel" id="panel-galeri">
     <div class="form-card">
       <h3>Unggah Foto Kegiatan</h3>
+      <p class="desc" style="font-size:0.82rem;color:var(--ink-600);margin:-8px 0 16px;">Foto yang diunggah di sini otomatis tampil di halaman publik, section &ldquo;Galeri Kegiatan&rdquo;.</p>
       <div class="form-grid">
         <div class="field" style="grid-column:1/-1;"><label>Keterangan Foto</label><input type="text" id="galCaption" placeholder="Contoh: Pembagian bantuan pangan, Agustus 2026"></div>
       </div>
@@ -253,11 +285,75 @@
       <button class="btn" id="galUploadBtn">Unggah Foto</button>
     </div>
 
-    <h3 class="section-title">Foto Tersimpan</h3>
+    <h3 class="section-title">Foto Tersimpan (klik foto untuk pratinjau)</h3>
     <div class="gal-admin-grid" id="galAdminGrid">
       <p style="color:var(--ink-600);font-size:0.85rem;">Memuat galeri&hellip;</p>
     </div>
   </div>
+
+  <!-- ---- PANEL: BERITA ---- -->
+  <div class="panel" id="panel-berita">
+    <div class="form-card">
+      <h3>Tambah Link Berita / Liputan</h3>
+      <p class="desc" style="font-size:0.82rem;color:var(--ink-600);margin:-8px 0 16px;">Untuk berita dari media luar (kita cuma punya link-nya, bukan hak cipta kontennya) &mdash; akan tampil sebagai daftar tautan di halaman publik.</p>
+      <div class="form-grid">
+        <div class="field"><label>Judul Berita</label><input type="text" id="newsTitle" placeholder="Contoh: Yayasan Salurkan Bantuan ke..."></div>
+        <div class="field"><label>Sumber Media</label><input type="text" id="newsSource" placeholder="Contoh: Serambi Indonesia"></div>
+        <div class="field"><label>Tanggal (opsional)</label><input type="date" id="newsDate"></div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>URL Berita</label>
+        <input type="url" id="newsUrl" placeholder="https://...">
+      </div>
+      <button class="btn" id="newsAddBtn">Tambah Berita</button>
+    </div>
+
+    <h3 class="section-title">Daftar Berita</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Judul</th><th>Sumber</th><th>Tanggal</th><th>Link</th><th></th></tr></thead>
+        <tbody id="newsBody"><tr class="empty-row"><td colspan="5">Memuat data&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ---- PANEL: PENGATURAN ---- -->
+  <div class="panel" id="panel-pengaturan">
+    <div class="form-card" style="max-width:420px;">
+      <h3>Ubah Kata Sandi</h3>
+      <div class="msg" id="pwChangeMsg"></div>
+      <div class="field"><label>Password Lama</label><input type="password" id="oldPw" autocomplete="current-password"></div>
+      <div class="field"><label>Password Baru</label><input type="password" id="newPw" autocomplete="new-password"></div>
+      <div class="field"><label>Konfirmasi Password Baru</label><input type="password" id="confirmPw" autocomplete="new-password"></div>
+      <button class="btn" id="changePwBtn" style="width:auto;padding:11px 24px;">Simpan Password Baru</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: KONFIRMASI PASSWORD (HAPUS) ===================== -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal-box">
+    <h3>Konfirmasi Diperlukan</h3>
+    <p class="desc" id="pwModalLabel">Masukkan password Anda untuk melanjutkan.</p>
+    <div class="msg" id="pwModalError" style="display:none;"></div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Password Anda</label>
+      <input type="password" id="pwModalInput" autocomplete="current-password">
+    </div>
+    <div class="modal-actions">
+      <button class="btn cancel" id="pwModalCancel">Batal</button>
+      <button class="btn confirm-danger" id="pwModalConfirm">Konfirmasi Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: PRATINJAU FILE ===================== -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-topbar">
+    <span id="previewTitle"></span>
+    <button class="preview-close" id="previewClose">Tutup &times;</button>
+  </div>
+  <div class="preview-body" id="previewBody"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -265,11 +361,12 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
   import {
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+    reauthenticateWithCredential, EmailAuthProvider, updatePassword
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
-    getFirestore, initializeFirestore, collection, addDoc, getDocs, deleteDoc, doc,
-    query, orderBy, limit, serverTimestamp, Timestamp
+    initializeFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+    query, orderBy, limit, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -283,12 +380,11 @@
   const IMGBB_API_KEY = "3323e00415ea2bdee2148da815e9af3b";
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
+  const BUILD_VERSION = "2026-08-29.4-fitur-lengkap";
+  console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const BUILD_VERSION = "2026-08-29.3-force-longpolling";
-  console.log("Admin build:", BUILD_VERSION);
-
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
     useFetchStreams: false
@@ -300,13 +396,11 @@
   function uploadWithProgress(url, formData, onProgress, timeoutMs = 45000){
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
     let simulated = 0;
     const ticker = setInterval(() => {
       simulated = Math.min(simulated + 6 + Math.random()*10, 90);
       if(onProgress) onProgress(Math.round(simulated));
     }, 300);
-
     const cleanup = () => { clearTimeout(timeoutId); clearInterval(ticker); };
 
     return fetch(url, { method: "POST", body: formData, signal: controller.signal })
@@ -314,7 +408,7 @@
         cleanup();
         if(onProgress) onProgress(100);
         let json = null;
-        try{ json = await res.json(); }catch(e){ /* respons bukan JSON */ }
+        try{ json = await res.json(); }catch(e){}
         if(!res.ok || !json){
           throw new Error((json && (json.error?.message || json.error)) || `Server menolak (status ${res.status})`);
         }
@@ -323,10 +417,8 @@
       .catch((err) => {
         cleanup();
         console.error("Upload error:", err);
-        if(err.name === "AbortError"){
-          throw new Error(`Waktu unggah habis (lebih dari ${Math.round(timeoutMs/1000)} detik). Periksa koneksi internet Anda lalu coba lagi.`);
-        }
-        throw new Error(err.message || "Tidak bisa terhubung ke server upload. Periksa koneksi internet Anda.");
+        if(err.name === "AbortError") throw new Error(`Waktu unggah habis (lebih dari ${Math.round(timeoutMs/1000)} detik). Coba lagi.`);
+        throw new Error(err.message || "Tidak bisa terhubung ke server upload.");
       });
   }
 
@@ -341,17 +433,85 @@
     const t = $("toast");
     t.textContent = msg;
     t.className = "toast show" + (isErr ? " err" : "");
-    setTimeout(()=> t.className = "toast", 3200);
+    setTimeout(()=> t.className = "toast", 3500);
   }
 
-  // ---------------- TIMEOUT UNTUK OPERASI FIRESTORE ----------------
   function withTimeout(promise, ms, timeoutMsg){
     let timer;
-    const timeout = new Promise((_, reject) => {
-      timer = setTimeout(() => reject(new Error(timeoutMsg)), ms);
-    });
+    const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(timeoutMsg)), ms); });
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   }
+
+  function friendlyLoadError(msg){
+    return msg === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : msg;
+  }
+
+  // ---------------- MODAL: KONFIRMASI PASSWORD ----------------
+  function askPasswordConfirm(label){
+    return new Promise((resolve) => {
+      $("pwModalLabel").textContent = label;
+      $("pwModalInput").value = "";
+      $("pwModalError").style.display = "none";
+      $("pwModal").classList.add("show");
+      setTimeout(()=> $("pwModalInput").focus(), 50);
+
+      const cleanup = () => {
+        $("pwModal").classList.remove("show");
+        $("pwModalConfirm").onclick = null;
+        $("pwModalCancel").onclick = null;
+      };
+
+      $("pwModalConfirm").onclick = async () => {
+        const pw = $("pwModalInput").value;
+        if(!pw){
+          $("pwModalError").textContent = "Masukkan password terlebih dahulu.";
+          $("pwModalError").style.display = "block";
+          return;
+        }
+        $("pwModalConfirm").disabled = true;
+        $("pwModalConfirm").textContent = "Memeriksa...";
+        try{
+          const cred = EmailAuthProvider.credential(auth.currentUser.email, pw);
+          await reauthenticateWithCredential(auth.currentUser, cred);
+          cleanup();
+          resolve(true);
+        }catch(e){
+          $("pwModalError").textContent = "Password salah. Coba lagi.";
+          $("pwModalError").style.display = "block";
+        }finally{
+          $("pwModalConfirm").disabled = false;
+          $("pwModalConfirm").textContent = "Konfirmasi Hapus";
+        }
+      };
+      $("pwModalCancel").onclick = () => { cleanup(); resolve(false); };
+    });
+  }
+
+  // ---------------- MODAL: PRATINJAU ----------------
+  function showPreview(url, fileName, title){
+    const ext = (fileName || "").split(".").pop().toLowerCase();
+    let inner = "";
+    if(["jpg","jpeg","png","gif","webp"].includes(ext)){
+      inner = `<img src="${url}" alt="${(title||"").replace(/"/g,'')}">`;
+    }else if(ext === "pdf"){
+      inner = `<iframe src="${url}" title="${(title||"").replace(/"/g,'')}"></iframe>`;
+    }else{
+      inner = `<p style="padding:50px;text-align:center;color:var(--ink-600);">Pratinjau tidak tersedia untuk tipe file ini (.${ext}). Silakan unduh untuk membukanya.</p>`;
+    }
+    $("previewTitle").textContent = title || "Pratinjau";
+    $("previewBody").innerHTML = inner;
+    $("previewOverlay").classList.add("show");
+  }
+  $("previewClose").addEventListener("click", () => {
+    $("previewOverlay").classList.remove("show");
+    $("previewBody").innerHTML = "";
+  });
+  $("previewOverlay").addEventListener("click", (e) => {
+    if(e.target.id === "previewOverlay"){
+      $("previewOverlay").classList.remove("show");
+      $("previewBody").innerHTML = "";
+    }
+  });
 
   // ---------------- LOGIN ----------------
   $("loginBtn").addEventListener("click", async () => {
@@ -376,9 +536,7 @@
       $("loginBtn").textContent = "Masuk";
     }
   });
-
   $("password").addEventListener("keydown", (e) => { if(e.key === "Enter") $("loginBtn").click(); });
-
   $("logoutBtn").addEventListener("click", () => signOut(auth));
 
   onAuthStateChanged(auth, (user) => {
@@ -389,6 +547,7 @@
       loadVisits();
       loadDocs();
       loadGalleryAdmin();
+      loadNews();
     }else{
       $("loginScreen").style.display = "flex";
       $("dashScreen").style.display = "none";
@@ -414,21 +573,17 @@
       body.innerHTML = "";
       if(snap.empty){
         body.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada data kunjungan.</td></tr>`;
-        $("statTotal").textContent = "0";
-        $("statToday").textContent = "0";
-        $("statUnique").textContent = "0";
+        $("statTotal").textContent = "0"; $("statToday").textContent = "0"; $("statUnique").textContent = "0";
         return;
       }
       const ips = new Set();
       let todayCount = 0;
       const todayStr = new Date().toDateString();
-
       snap.forEach(d => {
         const v = d.data();
         const time = v.createdAt ? v.createdAt.toDate() : null;
         if(v.ip) ips.add(v.ip);
         if(time && time.toDateString() === todayStr) todayCount++;
-
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${time ? time.toLocaleString("id-ID") : "-"}</td>
@@ -439,15 +594,13 @@
         `;
         body.appendChild(tr);
       });
-
       $("statTotal").textContent = snap.size + (snap.size === 50 ? "+" : "");
       $("statToday").textContent = todayCount;
       $("statUnique").textContent = ips.size;
     }catch(e){
-      $("visitsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</td></tr>`;
+      $("visitsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${friendlyLoadError(e.message)}</td></tr>`;
     }
   }
-
   function shortUA(ua){
     if(!ua) return "-";
     if(/Mobile|Android|iPhone/.test(ua)) return "Ponsel";
@@ -463,11 +616,8 @@
     const number = $("docNumber").value.trim();
     const date = $("docDate").value;
     const file = $("docFile").files[0];
+    if(!title || !file){ toast("Judul dan berkas wajib diisi.", true); return; }
 
-    if(!title || !file){
-      toast("Judul dan berkas wajib diisi.", true);
-      return;
-    }
     $("docUploadBtn").disabled = true;
     $("docUploadBtn").textContent = "Mengunggah...";
     setProgress("docProgressWrap","docProgressFill","docProgressLabel", 0);
@@ -475,26 +625,21 @@
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
       const result = await uploadWithProgress(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
         formData,
         (pct) => setProgress("docProgressWrap","docProgressFill","docProgressLabel", pct)
       );
-
       $("docUploadBtn").textContent = "Menyimpan data...";
-
       await withTimeout(
         addDoc(collection(db, "documents"), {
           title, category, number, date,
           fileURL: result.secure_url, fileName: file.name, cloudinaryId: result.public_id,
-          uploadedBy: auth.currentUser.email,
-          uploadedAt: serverTimestamp()
+          uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
-        "Berkas berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis). Coba lagi — cek juga apakah Firestore Rules sudah dipublish."
+        "Berkas berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis)."
       );
-
       toast("Dokumen berhasil diunggah.");
       $("docTitle").value = ""; $("docNumber").value = ""; $("docDate").value = ""; $("docFile").value = "";
       setProgress("docProgressWrap","docProgressFill","docProgressLabel", 0, false);
@@ -526,21 +671,29 @@
           <td><span class="badge">${v.category || "-"}</span></td>
           <td>${v.number || "-"}</td>
           <td>${v.date || "-"}</td>
-          <td><a class="dl-link" href="${v.fileURL}" target="_blank" rel="noopener">Unduh</a></td>
-          <td><button class="action-btn danger" data-id="${d.id}">Hapus</button></td>
+          <td>
+            <a class="dl-link" href="#" data-url="${v.fileURL}" data-filename="${(v.fileName||"").replace(/"/g,'')}" data-title="${v.title.replace(/"/g,'')}" onclick="return false;">Pratinjau</a>
+            <a class="dl-link" href="${v.fileURL}" target="_blank" rel="noopener">Unduh</a>
+          </td>
+          <td><button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button></td>
         `;
+        tr.querySelector('a[data-url]').addEventListener("click", (e) => {
+          const t = e.currentTarget;
+          showPreview(t.dataset.url, t.dataset.filename, t.dataset.title);
+        });
         body.appendChild(tr);
       });
       body.querySelectorAll(".action-btn.danger").forEach(btn => {
-        btn.addEventListener("click", () => deleteDocument(btn.dataset.id));
+        btn.addEventListener("click", () => deleteDocument(btn.dataset.id, btn.dataset.title));
       });
     }catch(e){
-      $("docsBody").innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</td></tr>`;
+      $("docsBody").innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat: ${friendlyLoadError(e.message)}</td></tr>`;
     }
   }
 
-  async function deleteDocument(id){
-    if(!confirm("Hapus data dokumen ini dari daftar? (berkas di Cloudinary tidak otomatis terhapus)")) return;
+  async function deleteDocument(id, title){
+    const ok = await askPasswordConfirm(`Hapus dokumen "${title}"? Masukkan password Anda untuk konfirmasi.`);
+    if(!ok) return;
     try{
       await deleteDoc(doc(db, "documents", id));
       toast("Dokumen dihapus dari daftar.");
@@ -554,17 +707,14 @@
   $("galUploadBtn").addEventListener("click", async () => {
     const caption = $("galCaption").value.trim();
     const file = $("galFile").files[0];
-    if(!file){
-      toast("Pilih gambar terlebih dahulu.", true);
-      return;
-    }
+    if(!file){ toast("Pilih gambar terlebih dahulu.", true); return; }
+
     $("galUploadBtn").disabled = true;
     $("galUploadBtn").textContent = "Mengunggah...";
     setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0);
     try{
       const formData = new FormData();
       formData.append("image", file);
-
       const json = await uploadWithProgress(
         `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
         formData,
@@ -573,20 +723,15 @@
       if(!json.success) throw new Error(json.error?.message || "Upload ImgBB gagal");
 
       $("galUploadBtn").textContent = "Menyimpan data...";
-
       await withTimeout(
         addDoc(collection(db, "gallery"), {
-          url: json.data.url,
-          deleteUrl: json.data.delete_url || "",
-          caption,
-          uploadedBy: auth.currentUser.email,
-          uploadedAt: serverTimestamp()
+          url: json.data.url, deleteUrl: json.data.delete_url || "", caption,
+          uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
-        "Foto berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis). Coba lagi — cek juga apakah Firestore Rules sudah dipublish."
+        "Foto berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis)."
       );
-
-      toast("Foto berhasil diunggah.");
+      toast("Foto berhasil diunggah — akan tampil di section Galeri situs publik.");
       $("galCaption").value = ""; $("galFile").value = "";
       setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0, false);
       loadGalleryAdmin();
@@ -614,24 +759,28 @@
         const card = document.createElement("div");
         card.className = "gal-admin-item";
         card.innerHTML = `
-          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}">
+          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}">
           <div class="meta">
             <p>${v.caption || "<i>Tanpa keterangan</i>"}</p>
-            <button class="action-btn danger" data-id="${d.id}">Hapus dari situs</button>
+            <button class="action-btn danger" data-id="${d.id}" data-caption="${(v.caption||"foto ini").replace(/"/g,'')}">Hapus dari situs</button>
           </div>
         `;
+        card.querySelector("img").addEventListener("click", (e) => {
+          showPreview(e.target.dataset.url, "foto.jpg", e.target.dataset.caption);
+        });
         grid.appendChild(card);
       });
       grid.querySelectorAll(".action-btn.danger").forEach(btn => {
-        btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id));
+        btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id, btn.dataset.caption));
       });
     }catch(e){
-      $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</p>`;
+      $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${friendlyLoadError(e.message)}</p>`;
     }
   }
 
-  async function deleteGalleryItem(id){
-    if(!confirm("Hapus foto ini dari galeri situs?")) return;
+  async function deleteGalleryItem(id, caption){
+    const ok = await askPasswordConfirm(`Hapus foto "${caption}" dari galeri situs? Masukkan password Anda untuk konfirmasi.`);
+    if(!ok) return;
     try{
       await deleteDoc(doc(db, "gallery", id));
       toast("Foto dihapus dari situs.");
@@ -640,6 +789,123 @@
       toast("Gagal menghapus: " + e.message, true);
     }
   }
+
+  // ---------------- BERITA ----------------
+  $("newsAddBtn").addEventListener("click", async () => {
+    const title = $("newsTitle").value.trim();
+    const source = $("newsSource").value.trim();
+    const date = $("newsDate").value;
+    const url = $("newsUrl").value.trim();
+    if(!title || !url){ toast("Judul dan URL wajib diisi.", true); return; }
+    if(!/^https?:\/\//i.test(url)){ toast("URL harus diawali http:// atau https://", true); return; }
+
+    $("newsAddBtn").disabled = true;
+    $("newsAddBtn").textContent = "Menyimpan...";
+    try{
+      await withTimeout(
+        addDoc(collection(db, "berita"), {
+          title, source, date, url,
+          addedBy: auth.currentUser.email, addedAt: serverTimestamp()
+        }),
+        20000,
+        "Gagal menyimpan (waktu habis). Coba lagi."
+      );
+      toast("Berita berhasil ditambahkan.");
+      $("newsTitle").value = ""; $("newsSource").value = ""; $("newsDate").value = ""; $("newsUrl").value = "";
+      loadNews();
+    }catch(e){
+      toast("Gagal menyimpan: " + e.message, true);
+    }finally{
+      $("newsAddBtn").disabled = false;
+      $("newsAddBtn").textContent = "Tambah Berita";
+    }
+  });
+
+  async function loadNews(){
+    try{
+      const q = query(collection(db, "berita"), orderBy("addedAt", "desc"));
+      const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
+      const body = $("newsBody");
+      body.innerHTML = "";
+      if(snap.empty){
+        body.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada berita ditambahkan.</td></tr>`;
+        return;
+      }
+      snap.forEach(d => {
+        const v = d.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${v.title}</td>
+          <td>${v.source || "-"}</td>
+          <td>${v.date || "-"}</td>
+          <td><a class="dl-link" href="${v.url}" target="_blank" rel="noopener">Buka Link</a></td>
+          <td><button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button></td>
+        `;
+        body.appendChild(tr);
+      });
+      body.querySelectorAll(".action-btn.danger").forEach(btn => {
+        btn.addEventListener("click", () => deleteNews(btn.dataset.id, btn.dataset.title));
+      });
+    }catch(e){
+      $("newsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${friendlyLoadError(e.message)}</td></tr>`;
+    }
+  }
+
+  async function deleteNews(id, title){
+    const ok = await askPasswordConfirm(`Hapus berita "${title}" dari daftar? Masukkan password Anda untuk konfirmasi.`);
+    if(!ok) return;
+    try{
+      await deleteDoc(doc(db, "berita", id));
+      toast("Berita dihapus.");
+      loadNews();
+    }catch(e){
+      toast("Gagal menghapus: " + e.message, true);
+    }
+  }
+
+  // ---------------- PENGATURAN: UBAH PASSWORD ----------------
+  $("changePwBtn").addEventListener("click", async () => {
+    const oldPw = $("oldPw").value;
+    const newPw = $("newPw").value;
+    const confirmPw = $("confirmPw").value;
+    const msg = $("pwChangeMsg");
+    msg.className = "msg";
+
+    if(!oldPw || !newPw || !confirmPw){
+      msg.textContent = "Lengkapi semua kolom.";
+      msg.className = "msg error";
+      return;
+    }
+    if(newPw !== confirmPw){
+      msg.textContent = "Konfirmasi password baru tidak cocok.";
+      msg.className = "msg error";
+      return;
+    }
+    if(newPw.length < 6){
+      msg.textContent = "Password baru minimal 6 karakter.";
+      msg.className = "msg error";
+      return;
+    }
+
+    $("changePwBtn").disabled = true;
+    $("changePwBtn").textContent = "Menyimpan...";
+    try{
+      const cred = EmailAuthProvider.credential(auth.currentUser.email, oldPw);
+      await reauthenticateWithCredential(auth.currentUser, cred);
+      await updatePassword(auth.currentUser, newPw);
+      msg.textContent = "Password berhasil diubah. Gunakan password baru saat login berikutnya.";
+      msg.className = "msg ok";
+      $("oldPw").value = ""; $("newPw").value = ""; $("confirmPw").value = "";
+      toast("Password berhasil diubah.");
+    }catch(e){
+      msg.textContent = (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential")
+        ? "Password lama salah." : "Gagal mengubah password: " + e.message;
+      msg.className = "msg error";
+    }finally{
+      $("changePwBtn").disabled = false;
+      $("changePwBtn").textContent = "Simpan Password Baru";
+    }
+  });
 </script>
 </body>
 </html>

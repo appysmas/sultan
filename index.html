@@ -320,6 +320,29 @@
     border-radius:2px;
   }
 
+  /* ---------- BERITA ---------- */
+  .berita{background:var(--cream-100);}
+  .news-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);}
+  .news-item{
+    background:#fff;padding:20px 24px;display:flex;justify-content:space-between;
+    align-items:center;gap:16px;text-decoration:none;color:inherit;transition:background .2s ease;
+  }
+  .news-item:hover{background:var(--cream-200);}
+  .news-item .news-main{flex:1;min-width:0;}
+  .news-item .news-title{
+    font-family:'Amiri',serif;font-size:1.05rem;color:var(--teal-950);margin:0 0 6px;
+    display:block;
+  }
+  .news-item .news-meta{
+    font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--ink-600);
+    text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .news-item .news-arrow{color:var(--gold-500);font-size:1.2rem;flex:none;}
+  .news-empty{
+    text-align:center;padding:50px 20px;color:var(--ink-600);font-size:0.92rem;
+    border:1px dashed var(--line);border-radius:2px;background:#fff;
+  }
+
   .privacy-note{
     font-size:0.72rem;color:rgba(250,246,236,0.4);max-width:600px;line-height:1.6;
   }
@@ -339,6 +362,7 @@
       <li><a href="#tentang">Tentang</a></li>
       <li><a href="#program">Program</a></li>
       <li><a href="#galeri">Galeri</a></li>
+      <li><a href="#berita">Berita</a></li>
       <li><a href="#struktur">Struktur</a></li>
       <li><a href="#legalitas">Legalitas</a></li>
       <li><a href="#kontak">Kontak</a></li>
@@ -583,6 +607,19 @@
   </div>
 </section>
 
+<section class="berita" id="berita">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Liputan Media</div>
+      <h2>Berita &amp; Publikasi</h2>
+      <p>Kumpulan liputan tentang kegiatan Yayasan dari media luar. Tautan ini mengarah langsung ke sumber aslinya.</p>
+    </div>
+    <div class="news-list" id="newsList">
+      <div class="news-empty" id="newsEmpty">Belum ada berita yang ditambahkan.</div>
+    </div>
+  </div>
+</section>
+
 <section id="legalitas" style="background:var(--cream-200);">
   <div class="wrap" style="max-width:820px;">
     <div class="section-head" style="margin-bottom:36px;">
@@ -711,6 +748,38 @@
       });
     }catch(e){
       console.warn("Gagal memuat galeri:", e.message);
+    }
+  })();
+
+  // ---- Muat berita/liputan publik ----
+  (async function loadNews(){
+    const list = document.getElementById("newsList");
+    const empty = document.getElementById("newsEmpty");
+    try{
+      const q = query(collection(db, "berita"), orderBy("addedAt", "desc"), limit(30));
+      const snap = await getDocs(q);
+      if(snap.empty) return; // biarkan pesan default tampil
+
+      empty.remove();
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const a = document.createElement("a");
+        a.className = "news-item";
+        a.href = d.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        const metaParts = [d.source, d.date].filter(Boolean);
+        a.innerHTML = `
+          <div class="news-main">
+            <span class="news-title">${(d.title||'').replace(/</g,'&lt;')}</span>
+            <span class="news-meta">${metaParts.join(' &middot; ')}</span>
+          </div>
+          <span class="news-arrow">&rarr;</span>
+        `;
+        list.appendChild(a);
+      });
+    }catch(e){
+      console.warn("Gagal memuat berita:", e.message);
     }
   })();
 </script>
