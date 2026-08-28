@@ -520,9 +520,11 @@
     const ext = (fileName || "").split(".").pop().toLowerCase();
     let inner = "";
     if(["jpg","jpeg","png","gif","webp"].includes(ext)){
-      inner = `<img src="${url}" alt="${(title||"").replace(/"/g,'')}">`;
+      inner = `<img src="${url}" alt="${(title||"").replace(/"/g,'')}" onerror="this.outerHTML='<div style=&quot;padding:40px;text-align:center;color:var(--danger);&quot;>Gambar gagal dimuat (kemungkinan diblokir jaringan Anda).<br><br>Coba buka link ini langsung: <br><a href=&quot;'+this.src+'&quot; target=&quot;_blank&quot; style=&quot;word-break:break-all;&quot;>'+this.src+'</a></div>'">`;
     }else if(ext === "pdf"){
-      inner = `<iframe src="${url}" title="${(title||"").replace(/"/g,'')}"></iframe>`;
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+      inner = `<iframe src="${viewerUrl}" title="${(title||"").replace(/"/g,'')}"></iframe>
+        <p style="text-align:center;padding:10px;font-size:0.78rem;color:var(--ink-600);">Kalau pratinjau tidak muncul, <a href="${url}" target="_blank" rel="noopener">buka file langsung di tab baru</a>.</p>`;
     }else{
       inner = `<p style="padding:50px;text-align:center;color:var(--ink-600);">Pratinjau tidak tersedia untuk tipe file ini (.${ext}). Silakan unduh untuk membukanya.</p>`;
     }
@@ -801,10 +803,11 @@
         const card = document.createElement("div");
         card.className = "gal-admin-item";
         card.innerHTML = `
-          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}">
+          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=&quot;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#fbe9e5;color:var(--danger);font-size:0.7rem;text-align:center;padding:8px;&quot;>Gambar gagal dimuat<br>(link tersimpan, coba buka manual)</div>')">
           <div class="meta">
             <p>${v.caption || "<i>Tanpa keterangan</i>"}</p>
-            <button class="action-btn danger" data-id="${d.id}" data-caption="${(v.caption||"foto ini").replace(/"/g,'')}">Hapus dari situs</button>
+            <a class="dl-link" href="${v.url}" target="_blank" rel="noopener" style="font-size:0.76rem;">Buka link langsung</a><br>
+            <button class="action-btn danger" data-id="${d.id}" data-caption="${(v.caption||"foto ini").replace(/"/g,'')}" style="margin-top:8px;">Hapus dari situs</button>
           </div>
         `;
         card.querySelector("img").addEventListener("click", (e) => {
