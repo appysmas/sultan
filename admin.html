@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin &middot; Yayasan Sultan Muhammad Aminsyah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-950:#08211f; --teal-900:#0c2e2b; --teal-800:#123f3b; --teal-700:#1a544e;
+    --gold-500:#c9a227; --gold-400:#dbb94a;
+    --cream-100:#faf6ec; --cream-200:#f2ead6;
+    --ink-900:#1b1f1c; --ink-600:#4a5450;
+    --line:#e4dcc6; --danger:#b3432f; --ok:#2f7a53;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream-100);color:var(--ink-900);font-family:'Plus Jakarta Sans',sans-serif;}
+  h1,h2,.serif{font-family:'Amiri',serif;font-weight:700;}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-500);}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--teal-950);padding:20px;
+  }
+  .login-box{
+    background:var(--cream-100);width:100%;max-width:380px;padding:40px 34px;
+    border-radius:2px;box-shadow:0 30px 60px rgba(0,0,0,0.3);
+  }
+  .login-box h1{font-size:1.4rem;color:var(--teal-950);margin:14px 0 4px;}
+  .login-box p.sub{font-size:0.85rem;color:var(--ink-600);margin:0 0 26px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:0.78rem;font-weight:600;margin-bottom:6px;color:var(--teal-900);}
+  .field input{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:2px;
+    font-size:0.92rem;background:#fff;
+  }
+  .field input:focus{outline:2px solid var(--gold-400);outline-offset:1px;border-color:var(--gold-500);}
+  .btn{
+    width:100%;background:var(--teal-950);color:var(--cream-100);border:none;
+    padding:13px;font-weight:700;font-size:0.9rem;border-radius:2px;margin-top:6px;
+  }
+  .btn:hover{background:var(--teal-800);}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;}
+  .msg{font-size:0.82rem;padding:10px 12px;border-radius:2px;margin-bottom:14px;display:none;}
+  .msg.error{background:#fbe9e5;color:var(--danger);display:block;}
+  .msg.ok{background:#e7f4ec;color:var(--ok);display:block;}
+
+  /* ---------- DASHBOARD SHELL ---------- */
+  #dashScreen{display:none;min-height:100vh;}
+  .topbar{
+    background:var(--teal-950);color:var(--cream-100);padding:0 28px;
+    display:flex;align-items:center;justify-content:space-between;height:66px;
+    position:sticky;top:0;z-index:10;
+  }
+  .topbar .brand{display:flex;align-items:center;gap:12px;font-family:'Amiri',serif;font-size:1.05rem;}
+  .topbar .brand small{display:block;font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--gold-400);letter-spacing:0.1em;}
+  .topbar .who{display:flex;align-items:center;gap:16px;font-size:0.85rem;color:var(--cream-200);}
+  .logout-btn{background:none;border:1px solid rgba(250,246,236,0.3);color:var(--cream-100);padding:8px 16px;border-radius:2px;font-size:0.82rem;}
+  .logout-btn:hover{border-color:var(--gold-400);color:var(--gold-400);}
+
+  .tabs{
+    display:flex;gap:4px;background:var(--cream-200);padding:0 28px;
+    border-bottom:1px solid var(--line);overflow-x:auto;
+  }
+  .tab-btn{
+    background:none;border:none;padding:16px 18px;font-size:0.87rem;font-weight:600;
+    color:var(--ink-600);border-bottom:2px solid transparent;white-space:nowrap;
+  }
+  .tab-btn.active{color:var(--teal-950);border-bottom-color:var(--gold-500);}
+
+  .panel{display:none;padding:34px 28px;max-width:1180px;margin:0 auto;}
+  .panel.active{display:block;}
+
+  /* ---------- STAT CARDS ---------- */
+  .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:30px;}
+  .stat-card{background:#fff;border:1px solid var(--line);padding:22px 20px;border-radius:2px;}
+  .stat-card b{display:block;font-family:'Amiri',serif;font-size:2rem;color:var(--teal-950);}
+  .stat-card span{font-size:0.8rem;color:var(--ink-600);}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);}
+  th,td{text-align:left;padding:11px 14px;font-size:0.84rem;border-bottom:1px solid var(--cream-200);}
+  th{background:var(--cream-200);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-600);}
+  tr:last-child td{border-bottom:none;}
+  .badge{padding:3px 10px;border-radius:999px;font-size:0.72rem;font-weight:600;background:var(--cream-200);color:var(--teal-900);}
+  .table-wrap{overflow-x:auto;}
+  .empty-row td{text-align:center;color:var(--ink-600);padding:30px;}
+
+  /* ---------- FORMS ---------- */
+  .form-card{
+    background:#fff;border:1px solid var(--line);padding:24px;border-radius:2px;margin-bottom:26px;
+  }
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:14px;}
+  .form-card h3{margin:0 0 18px;font-size:1.05rem;color:var(--teal-950);font-family:'Amiri',serif;}
+  .form-card .btn{width:auto;padding:11px 24px;}
+  .action-btn{
+    background:none;border:1px solid var(--line);padding:6px 12px;border-radius:2px;
+    font-size:0.76rem;color:var(--ink-600);margin-right:6px;
+  }
+  .action-btn.danger{color:var(--danger);border-color:#f0cfc6;}
+  .action-btn:hover{background:var(--cream-200);}
+  a.dl-link{color:var(--teal-700);font-weight:600;text-decoration:none;}
+  a.dl-link:hover{text-decoration:underline;}
+
+  .section-title{font-size:1.15rem;color:var(--teal-950);margin:0 0 18px;font-family:'Amiri',serif;}
+  .gal-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+  .gal-admin-item{border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff;}
+  .gal-admin-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+  .gal-admin-item .meta{padding:10px 12px;}
+  .gal-admin-item .meta p{margin:0 0 8px;font-size:0.78rem;color:var(--ink-600);}
+
+  .toast{
+    position:fixed;bottom:24px;right:24px;background:var(--teal-950);color:var(--cream-100);
+    padding:14px 20px;border-radius:2px;font-size:0.85rem;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    display:none;z-index:100;max-width:320px;
+  }
+  .toast.show{display:block;}
+  .toast.err{background:var(--danger);}
+
+  @media (max-width:700px){
+    .topbar .who span.uid{display:none;}
+    .panel{padding:24px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="eyebrow">Area Pengurus</span>
+    <h1>Masuk ke Dashboard</h1>
+    <p class="sub">Yayasan Sultan Muhammad Aminsyah &mdash; khusus pengurus terdaftar.</p>
+    <div class="msg" id="loginMsg"></div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="username" placeholder="nama@email.com">
+    </div>
+    <div class="field">
+      <label for="password">Kata Sandi</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+    </div>
+    <button class="btn" id="loginBtn">Masuk</button>
+  </div>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dashScreen">
+  <div class="topbar">
+    <div class="brand">Sultan Muhammad Aminsyah<small>Dashboard Pengurus</small></div>
+    <div class="who">
+      <span class="uid" id="whoEmail"></span>
+      <button class="logout-btn" id="logoutBtn">Keluar</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="statistik">Statistik Pengunjung</button>
+    <button class="tab-btn" data-tab="inventaris">Inventaris Surat &amp; Dokumen</button>
+    <button class="tab-btn" data-tab="galeri">Galeri Foto</button>
+  </div>
+
+  <!-- ---- PANEL: STATISTIK ---- -->
+  <div class="panel active" id="panel-statistik">
+    <div class="stat-cards">
+      <div class="stat-card"><b id="statTotal">&mdash;</b><span>Total kunjungan tercatat</span></div>
+      <div class="stat-card"><b id="statToday">&mdash;</b><span>Kunjungan hari ini</span></div>
+      <div class="stat-card"><b id="statUnique">&mdash;</b><span>Perkiraan pengunjung unik (IP)</span></div>
+    </div>
+    <h3 class="section-title">50 Kunjungan Terbaru</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Waktu</th><th>Alamat IP</th><th>Lokasi</th><th>Halaman</th><th>Perangkat</th></tr></thead>
+        <tbody id="visitsBody"><tr class="empty-row"><td colspan="5">Memuat data&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ---- PANEL: INVENTARIS ---- -->
+  <div class="panel" id="panel-inventaris">
+    <div class="form-card">
+      <h3>Unggah Dokumen Baru</h3>
+      <div class="form-grid">
+        <div class="field"><label>Judul / Perihal</label><input type="text" id="docTitle" placeholder="Contoh: Surat Undangan Rapat"></div>
+        <div class="field"><label>Kategori</label>
+          <select id="docCategory" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:2px;background:#fff;">
+            <option>Surat Masuk</option>
+            <option>Surat Keluar</option>
+            <option>Legalitas</option>
+            <option>Proposal</option>
+            <option>Laporan Keuangan</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="field"><label>Nomor Surat (opsional)</label><input type="text" id="docNumber" placeholder="Contoh: 012/YSMA/VIII/2026"></div>
+        <div class="field"><label>Tanggal</label><input type="date" id="docDate"></div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Berkas (PDF / DOCX / JPG)</label>
+        <input type="file" id="docFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+      </div>
+      <button class="btn" id="docUploadBtn">Unggah Dokumen</button>
+    </div>
+
+    <h3 class="section-title">Daftar Dokumen</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Judul</th><th>Kategori</th><th>No. Surat</th><th>Tanggal</th><th>Berkas</th><th></th></tr></thead>
+        <tbody id="docsBody"><tr class="empty-row"><td colspan="6">Memuat data&hellip;</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ---- PANEL: GALERI ---- -->
+  <div class="panel" id="panel-galeri">
+    <div class="form-card">
+      <h3>Unggah Foto Kegiatan</h3>
+      <div class="form-grid">
+        <div class="field" style="grid-column:1/-1;"><label>Keterangan Foto</label><input type="text" id="galCaption" placeholder="Contoh: Pembagian bantuan pangan, Agustus 2026"></div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Pilih Gambar</label>
+        <input type="file" id="galFile" accept="image/*">
+      </div>
+      <button class="btn" id="galUploadBtn">Unggah Foto</button>
+    </div>
+
+    <h3 class="section-title">Foto Tersimpan</h3>
+    <div class="gal-admin-grid" id="galAdminGrid">
+      <p style="color:var(--ink-600);font-size:0.85rem;">Memuat galeri&hellip;</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+    query, orderBy, limit, serverTimestamp, Timestamp
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  import {
+    getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+  } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBEchKipHdOnanFbMIekJq4S8NDfywWL7Y",
+    authDomain: "ysmas-35780.firebaseapp.com",
+    projectId: "ysmas-35780",
+    storageBucket: "ysmas-35780.firebasestorage.app",
+    messagingSenderId: "111214190041",
+    appId: "1:111214190041:web:8d9375c79bc9534baa4dc8"
+  };
+  const IMGBB_API_KEY = "3323e00415ea2bdee2148da815e9af3b";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  const $ = (id) => document.getElementById(id);
+
+  function toast(msg, isErr=false){
+    const t = $("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (isErr ? " err" : "");
+    setTimeout(()=> t.className = "toast", 3200);
+  }
+
+  // ---------------- LOGIN ----------------
+  $("loginBtn").addEventListener("click", async () => {
+    const email = $("email").value.trim();
+    const pass = $("password").value;
+    const msg = $("loginMsg");
+    msg.className = "msg";
+    if(!email || !pass){
+      msg.textContent = "Isi email dan kata sandi terlebih dahulu.";
+      msg.className = "msg error";
+      return;
+    }
+    $("loginBtn").disabled = true;
+    $("loginBtn").textContent = "Memeriksa...";
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+    }catch(e){
+      msg.textContent = "Email atau kata sandi salah, atau akun belum terdaftar.";
+      msg.className = "msg error";
+    }finally{
+      $("loginBtn").disabled = false;
+      $("loginBtn").textContent = "Masuk";
+    }
+  });
+
+  $("password").addEventListener("keydown", (e) => { if(e.key === "Enter") $("loginBtn").click(); });
+
+  $("logoutBtn").addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      $("loginScreen").style.display = "none";
+      $("dashScreen").style.display = "block";
+      $("whoEmail").textContent = user.email;
+      loadVisits();
+      loadDocs();
+      loadGalleryAdmin();
+    }else{
+      $("loginScreen").style.display = "flex";
+      $("dashScreen").style.display = "none";
+    }
+  });
+
+  // ---------------- TABS ----------------
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      $("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---------------- STATISTIK ----------------
+  async function loadVisits(){
+    try{
+      const q = query(collection(db, "visits"), orderBy("createdAt", "desc"), limit(50));
+      const snap = await getDocs(q);
+      const body = $("visitsBody");
+      body.innerHTML = "";
+      if(snap.empty){
+        body.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada data kunjungan.</td></tr>`;
+        $("statTotal").textContent = "0";
+        $("statToday").textContent = "0";
+        $("statUnique").textContent = "0";
+        return;
+      }
+      const ips = new Set();
+      let todayCount = 0;
+      const todayStr = new Date().toDateString();
+
+      snap.forEach(d => {
+        const v = d.data();
+        const time = v.createdAt ? v.createdAt.toDate() : null;
+        if(v.ip) ips.add(v.ip);
+        if(time && time.toDateString() === todayStr) todayCount++;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${time ? time.toLocaleString("id-ID") : "-"}</td>
+          <td>${v.ip || "-"}</td>
+          <td>${[v.city, v.country].filter(Boolean).join(", ") || "-"}</td>
+          <td>${v.page || "-"}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(v.userAgent||"").replace(/"/g,'')}">${shortUA(v.userAgent)}</td>
+        `;
+        body.appendChild(tr);
+      });
+
+      $("statTotal").textContent = snap.size + (snap.size === 50 ? "+" : "");
+      $("statToday").textContent = todayCount;
+      $("statUnique").textContent = ips.size;
+    }catch(e){
+      $("visitsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${e.message}</td></tr>`;
+    }
+  }
+
+  function shortUA(ua){
+    if(!ua) return "-";
+    if(/Mobile|Android|iPhone/.test(ua)) return "Ponsel";
+    if(/Windows/.test(ua)) return "Windows";
+    if(/Macintosh/.test(ua)) return "Mac";
+    return "Desktop";
+  }
+
+  // ---------------- INVENTARIS ----------------
+  $("docUploadBtn").addEventListener("click", async () => {
+    const title = $("docTitle").value.trim();
+    const category = $("docCategory").value;
+    const number = $("docNumber").value.trim();
+    const date = $("docDate").value;
+    const file = $("docFile").files[0];
+
+    if(!title || !file){
+      toast("Judul dan berkas wajib diisi.", true);
+      return;
+    }
+    $("docUploadBtn").disabled = true;
+    $("docUploadBtn").textContent = "Mengunggah...";
+    try{
+      const path = `documents/${Date.now()}_${file.name}`;
+      const sRef = ref(storage, path);
+      await uploadBytes(sRef, file);
+      const url = await getDownloadURL(sRef);
+
+      await addDoc(collection(db, "documents"), {
+        title, category, number, date,
+        fileURL: url, fileName: file.name, storagePath: path,
+        uploadedBy: auth.currentUser.email,
+        uploadedAt: serverTimestamp()
+      });
+
+      toast("Dokumen berhasil diunggah.");
+      $("docTitle").value = ""; $("docNumber").value = ""; $("docDate").value = ""; $("docFile").value = "";
+      loadDocs();
+    }catch(e){
+      toast("Gagal mengunggah: " + e.message, true);
+    }finally{
+      $("docUploadBtn").disabled = false;
+      $("docUploadBtn").textContent = "Unggah Dokumen";
+    }
+  });
+
+  async function loadDocs(){
+    try{
+      const q = query(collection(db, "documents"), orderBy("uploadedAt", "desc"));
+      const snap = await getDocs(q);
+      const body = $("docsBody");
+      body.innerHTML = "";
+      if(snap.empty){
+        body.innerHTML = `<tr class="empty-row"><td colspan="6">Belum ada dokumen.</td></tr>`;
+        return;
+      }
+      snap.forEach(d => {
+        const v = d.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${v.title}</td>
+          <td><span class="badge">${v.category || "-"}</span></td>
+          <td>${v.number || "-"}</td>
+          <td>${v.date || "-"}</td>
+          <td><a class="dl-link" href="${v.fileURL}" target="_blank" rel="noopener">Unduh</a></td>
+          <td><button class="action-btn danger" data-id="${d.id}" data-path="${v.storagePath}">Hapus</button></td>
+        `;
+        body.appendChild(tr);
+      });
+      body.querySelectorAll(".action-btn.danger").forEach(btn => {
+        btn.addEventListener("click", () => deleteDocument(btn.dataset.id, btn.dataset.path));
+      });
+    }catch(e){
+      $("docsBody").innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat: ${e.message}</td></tr>`;
+    }
+  }
+
+  async function deleteDocument(id, storagePath){
+    if(!confirm("Hapus dokumen ini? Tindakan tidak bisa dibatalkan.")) return;
+    try{
+      await deleteDoc(doc(db, "documents", id));
+      if(storagePath){
+        try{ await deleteObject(ref(storage, storagePath)); }catch(e){ /* file mungkin sudah tidak ada */ }
+      }
+      toast("Dokumen dihapus.");
+      loadDocs();
+    }catch(e){
+      toast("Gagal menghapus: " + e.message, true);
+    }
+  }
+
+  // ---------------- GALERI ----------------
+  $("galUploadBtn").addEventListener("click", async () => {
+    const caption = $("galCaption").value.trim();
+    const file = $("galFile").files[0];
+    if(!file){
+      toast("Pilih gambar terlebih dahulu.", true);
+      return;
+    }
+    $("galUploadBtn").disabled = true;
+    $("galUploadBtn").textContent = "Mengunggah...";
+    try{
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST", body: formData
+      });
+      const json = await res.json();
+      if(!json.success) throw new Error(json.error?.message || "Upload ImgBB gagal");
+
+      await addDoc(collection(db, "gallery"), {
+        url: json.data.url,
+        deleteUrl: json.data.delete_url || "",
+        caption,
+        uploadedBy: auth.currentUser.email,
+        uploadedAt: serverTimestamp()
+      });
+
+      toast("Foto berhasil diunggah.");
+      $("galCaption").value = ""; $("galFile").value = "";
+      loadGalleryAdmin();
+    }catch(e){
+      toast("Gagal mengunggah: " + e.message, true);
+    }finally{
+      $("galUploadBtn").disabled = false;
+      $("galUploadBtn").textContent = "Unggah Foto";
+    }
+  });
+
+  async function loadGalleryAdmin(){
+    try{
+      const q = query(collection(db, "gallery"), orderBy("uploadedAt", "desc"));
+      const snap = await getDocs(q);
+      const grid = $("galAdminGrid");
+      grid.innerHTML = "";
+      if(snap.empty){
+        grid.innerHTML = `<p style="color:var(--ink-600);font-size:0.85rem;">Belum ada foto.</p>`;
+        return;
+      }
+      snap.forEach(d => {
+        const v = d.data();
+        const card = document.createElement("div");
+        card.className = "gal-admin-item";
+        card.innerHTML = `
+          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}">
+          <div class="meta">
+            <p>${v.caption || "<i>Tanpa keterangan</i>"}</p>
+            <button class="action-btn danger" data-id="${d.id}">Hapus dari situs</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      grid.querySelectorAll(".action-btn.danger").forEach(btn => {
+        btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id));
+      });
+    }catch(e){
+      $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${e.message}</p>`;
+    }
+  }
+
+  async function deleteGalleryItem(id){
+    if(!confirm("Hapus foto ini dari galeri situs?")) return;
+    try{
+      await deleteDoc(doc(db, "gallery", id));
+      toast("Foto dihapus dari situs.");
+      loadGalleryAdmin();
+    }catch(e){
+      toast("Gagal menghapus: " + e.message, true);
+    }
+  }
+</script>
+</body>
+</html>

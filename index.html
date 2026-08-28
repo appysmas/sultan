@@ -295,6 +295,36 @@
     html{scroll-behavior:auto;}
     *{transition:none!important;}
   }
+
+  /* ---------- GALERI ---------- */
+  .galeri{background:var(--teal-950);color:var(--cream-100);}
+  .galeri .section-head .eyebrow{color:var(--gold-400);}
+  .galeri .section-head h2{color:var(--cream-100);}
+  .galeri .section-head p{color:var(--cream-200);}
+  .gal-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;
+  }
+  .gal-item{
+    aspect-ratio:4/3;border-radius:2px;overflow:hidden;position:relative;
+    background:var(--teal-800);border:1px solid rgba(250,246,236,0.12);
+  }
+  .gal-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gal-item .cap{
+    position:absolute;left:0;right:0;bottom:0;padding:10px 12px;
+    background:linear-gradient(to top, rgba(8,33,31,0.85), transparent);
+    font-size:0.78rem;color:var(--cream-100);
+  }
+  .gal-empty{
+    grid-column:1/-1;text-align:center;padding:50px 20px;
+    color:var(--cream-200);font-size:0.92rem;border:1px dashed rgba(250,246,236,0.25);
+    border-radius:2px;
+  }
+
+  .privacy-note{
+    font-size:0.72rem;color:rgba(250,246,236,0.4);max-width:600px;line-height:1.6;
+  }
+  .admin-link{color:rgba(250,246,236,0.35)!important;text-decoration:none;font-size:0.78rem;}
+  .admin-link:hover{color:var(--gold-400)!important;}
 </style>
 </head>
 <body>
@@ -308,6 +338,7 @@
     <ul class="navlinks">
       <li><a href="#tentang">Tentang</a></li>
       <li><a href="#program">Program</a></li>
+      <li><a href="#galeri">Galeri</a></li>
       <li><a href="#struktur">Struktur</a></li>
       <li><a href="#legalitas">Legalitas</a></li>
       <li><a href="#kontak">Kontak</a></li>
@@ -539,6 +570,19 @@
   </svg>
 </div>
 
+<section class="galeri" id="galeri">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Dokumentasi</div>
+      <h2>Galeri Kegiatan</h2>
+      <p>Foto kegiatan Yayasan akan tampil di sini seiring program berjalan.</p>
+    </div>
+    <div class="gal-grid" id="galGrid">
+      <div class="gal-empty" id="galEmpty">Galeri akan segera hadir &mdash; foto kegiatan akan tampil otomatis di sini setelah diunggah pengurus.</div>
+    </div>
+  </div>
+</section>
+
 <section id="legalitas" style="background:var(--cream-200);">
   <div class="wrap" style="max-width:820px;">
     <div class="section-head" style="margin-bottom:36px;">
@@ -592,8 +636,77 @@
       <span>&copy; SRISP 2026. Seluruh hak dilindungi.</span>
       <span>Yayasan Sultan Muhammad Aminsyah</span>
     </div>
+    <div style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <p class="privacy-note">Situs ini mencatat data kunjungan (waktu akses dan perkiraan lokasi dari alamat IP) untuk keperluan statistik internal Yayasan, sesuai ketentuan perlindungan data pribadi yang berlaku.</p>
+      <a href="admin.html" class="admin-link">Login Pengurus &rarr;</a>
+    </div>
   </div>
 </footer>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBEchKipHdOnanFbMIekJq4S8NDfywWL7Y",
+    authDomain: "ysmas-35780.firebaseapp.com",
+    projectId: "ysmas-35780",
+    storageBucket: "ysmas-35780.firebasestorage.app",
+    messagingSenderId: "111214190041",
+    appId: "1:111214190041:web:8d9375c79bc9534baa4dc8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ---- Catat kunjungan (diam-diam, gagal pun tidak mengganggu tampilan) ----
+  (async function logVisit(){
+    try{
+      let ip = "", city = "", country = "";
+      try{
+        const res = await fetch("https://ipapi.co/json/");
+        if(res.ok){
+          const geo = await res.json();
+          ip = geo.ip || "";
+          city = geo.city || "";
+          country = geo.country_name || "";
+        }
+      }catch(e){ /* provider IP gagal, tetap lanjut catat kunjungan tanpa lokasi */ }
+
+      await addDoc(collection(db, "visits"), {
+        ip, city, country,
+        page: location.pathname.split("/").pop() || "index.html",
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || "",
+        createdAt: serverTimestamp()
+      });
+    }catch(e){
+      console.warn("Gagal mencatat kunjungan:", e.message);
+    }
+  })();
+
+  // ---- Muat galeri publik ----
+  (async function loadGallery(){
+    const grid = document.getElementById("galGrid");
+    const empty = document.getElementById("galEmpty");
+    try{
+      const q = query(collection(db, "gallery"), orderBy("uploadedAt", "desc"), limit(24));
+      const snap = await getDocs(q);
+      if(snap.empty) return; // biarkan pesan default tampil
+
+      empty.remove();
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const item = document.createElement("div");
+        item.className = "gal-item";
+        item.innerHTML = `<img src="${d.url}" alt="${(d.caption||'Dokumentasi kegiatan').replace(/"/g,'')}" loading="lazy">${d.caption ? `<div class="cap">${d.caption}</div>` : ""}`;
+        grid.appendChild(item);
+      });
+    }catch(e){
+      console.warn("Gagal memuat galeri:", e.message);
+    }
+  })();
+</script>
 </body>
 </html>
