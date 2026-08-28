@@ -337,6 +337,15 @@
     setTimeout(()=> t.className = "toast", 3200);
   }
 
+  // ---------------- TIMEOUT UNTUK OPERASI FIRESTORE ----------------
+  function withTimeout(promise, ms, timeoutMsg){
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(timeoutMsg)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  }
+
   // ---------------- LOGIN ----------------
   $("loginBtn").addEventListener("click", async () => {
     const email = $("email").value.trim();
@@ -393,7 +402,7 @@
   async function loadVisits(){
     try{
       const q = query(collection(db, "visits"), orderBy("createdAt", "desc"), limit(50));
-      const snap = await getDocs(q);
+      const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
       const body = $("visitsBody");
       body.innerHTML = "";
       if(snap.empty){
@@ -428,7 +437,7 @@
       $("statToday").textContent = todayCount;
       $("statUnique").textContent = ips.size;
     }catch(e){
-      $("visitsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${e.message}</td></tr>`;
+      $("visitsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</td></tr>`;
     }
   }
 
@@ -466,12 +475,18 @@
         (pct) => setProgress("docProgressWrap","docProgressFill","docProgressLabel", pct)
       );
 
-      await addDoc(collection(db, "documents"), {
-        title, category, number, date,
-        fileURL: result.secure_url, fileName: file.name, cloudinaryId: result.public_id,
-        uploadedBy: auth.currentUser.email,
-        uploadedAt: serverTimestamp()
-      });
+      $("docUploadBtn").textContent = "Menyimpan data...";
+
+      await withTimeout(
+        addDoc(collection(db, "documents"), {
+          title, category, number, date,
+          fileURL: result.secure_url, fileName: file.name, cloudinaryId: result.public_id,
+          uploadedBy: auth.currentUser.email,
+          uploadedAt: serverTimestamp()
+        }),
+        20000,
+        "Berkas berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis). Coba lagi — cek juga apakah Firestore Rules sudah dipublish."
+      );
 
       toast("Dokumen berhasil diunggah.");
       $("docTitle").value = ""; $("docNumber").value = ""; $("docDate").value = ""; $("docFile").value = "";
@@ -489,7 +504,7 @@
   async function loadDocs(){
     try{
       const q = query(collection(db, "documents"), orderBy("uploadedAt", "desc"));
-      const snap = await getDocs(q);
+      const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
       const body = $("docsBody");
       body.innerHTML = "";
       if(snap.empty){
@@ -513,7 +528,7 @@
         btn.addEventListener("click", () => deleteDocument(btn.dataset.id));
       });
     }catch(e){
-      $("docsBody").innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat: ${e.message}</td></tr>`;
+      $("docsBody").innerHTML = `<tr class="empty-row"><td colspan="6">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</td></tr>`;
     }
   }
 
@@ -550,13 +565,19 @@
       );
       if(!json.success) throw new Error(json.error?.message || "Upload ImgBB gagal");
 
-      await addDoc(collection(db, "gallery"), {
-        url: json.data.url,
-        deleteUrl: json.data.delete_url || "",
-        caption,
-        uploadedBy: auth.currentUser.email,
-        uploadedAt: serverTimestamp()
-      });
+      $("galUploadBtn").textContent = "Menyimpan data...";
+
+      await withTimeout(
+        addDoc(collection(db, "gallery"), {
+          url: json.data.url,
+          deleteUrl: json.data.delete_url || "",
+          caption,
+          uploadedBy: auth.currentUser.email,
+          uploadedAt: serverTimestamp()
+        }),
+        20000,
+        "Foto berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis). Coba lagi — cek juga apakah Firestore Rules sudah dipublish."
+      );
 
       toast("Foto berhasil diunggah.");
       $("galCaption").value = ""; $("galFile").value = "";
@@ -574,7 +595,7 @@
   async function loadGalleryAdmin(){
     try{
       const q = query(collection(db, "gallery"), orderBy("uploadedAt", "desc"));
-      const snap = await getDocs(q);
+      const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
       const grid = $("galAdminGrid");
       grid.innerHTML = "";
       if(snap.empty){
@@ -598,7 +619,7 @@
         btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id));
       });
     }catch(e){
-      $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${e.message}</p>`;
+      $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${e.message === "TIMEOUT_LOAD" ? "koneksi ke database terlalu lama (periksa internet / Firestore Rules)" : e.message}</p>`;
     }
   }
 
