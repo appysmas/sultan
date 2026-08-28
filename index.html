@@ -658,8 +658,11 @@
   };
 
   const app = initializeApp(firebaseConfig);
+  const BUILD_VERSION = "2026-08-29.3-force-longpolling";
+  console.log("Site build:", BUILD_VERSION);
+
   const db = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
     useFetchStreams: false
   });
 

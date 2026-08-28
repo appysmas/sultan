@@ -160,6 +160,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.3-force-longpolling</p>
   </div>
 </div>
 
@@ -285,8 +286,11 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const BUILD_VERSION = "2026-08-29.3-force-longpolling";
+  console.log("Admin build:", BUILD_VERSION);
+
   const db = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
+    experimentalForceLongPolling: true,
     useFetchStreams: false
   });
 
