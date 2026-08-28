@@ -173,8 +173,13 @@
 </head>
 <body>
 
+<!-- ===================== LOADING (cek sesi) ===================== -->
+<div id="sessionCheck" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--teal-950);color:var(--cream-200);font-family:'JetBrains Mono',monospace;font-size:0.85rem;">
+  Memeriksa sesi&hellip;
+</div>
+
 <!-- ===================== LOGIN ===================== -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none;">
   <div class="login-box">
     <span class="eyebrow">Area Pengurus</span>
     <h1>Masuk ke Dashboard</h1>
@@ -326,6 +331,18 @@
       <div class="field"><label>Password Baru</label><input type="password" id="newPw" autocomplete="new-password"></div>
       <div class="field"><label>Konfirmasi Password Baru</label><input type="password" id="confirmPw" autocomplete="new-password"></div>
       <button class="btn" id="changePwBtn" style="width:auto;padding:11px 24px;">Simpan Password Baru</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: KONFIRMASI KELUAR ===================== -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-box">
+    <h3>Keluar dari Dashboard?</h3>
+    <p class="desc">Anda perlu login kembali untuk mengakses dashboard ini.</p>
+    <div class="modal-actions">
+      <button class="btn cancel" id="logoutCancel">Batal</button>
+      <button class="btn confirm-danger" id="logoutConfirm">Ya, Keluar</button>
     </div>
   </div>
 </div>
@@ -518,18 +535,30 @@
   // ---------------- MODAL: PRATINJAU ----------------
   function showPreview(url, fileName, title){
     const ext = (fileName || "").split(".").pop().toLowerCase();
-    let inner = "";
-    if(["jpg","jpeg","png","gif","webp"].includes(ext)){
-      inner = `<img src="${url}" alt="${(title||"").replace(/"/g,'')}" onerror="this.outerHTML='<div style=&quot;padding:40px;text-align:center;color:var(--danger);&quot;>Gambar gagal dimuat (kemungkinan diblokir jaringan Anda).<br><br>Coba buka link ini langsung: <br><a href=&quot;'+this.src+'&quot; target=&quot;_blank&quot; style=&quot;word-break:break-all;&quot;>'+this.src+'</a></div>'">`;
-    }else if(ext === "pdf"){
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-      inner = `<iframe src="${viewerUrl}" title="${(title||"").replace(/"/g,'')}"></iframe>
-        <p style="text-align:center;padding:10px;font-size:0.78rem;color:var(--ink-600);">Kalau pratinjau tidak muncul, <a href="${url}" target="_blank" rel="noopener">buka file langsung di tab baru</a>.</p>`;
-    }else{
-      inner = `<p style="padding:50px;text-align:center;color:var(--ink-600);">Pratinjau tidak tersedia untuk tipe file ini (.${ext}). Silakan unduh untuk membukanya.</p>`;
-    }
     $("previewTitle").textContent = title || "Pratinjau";
-    $("previewBody").innerHTML = inner;
+    const body = $("previewBody");
+    body.innerHTML = "";
+
+    if(["jpg","jpeg","png","gif","webp"].includes(ext)){
+      const img = document.createElement("img");
+      img.alt = title || "";
+      img.addEventListener("error", () => {
+        body.innerHTML = `
+          <div style="padding:40px;text-align:center;color:var(--danger);max-width:600px;">
+            <p style="margin:0 0 14px;">Gambar gagal dimuat di halaman ini (kemungkinan diblokir jaringan/antivirus Anda).</p>
+            <p style="font-size:0.8rem;word-break:break-all;background:var(--cream-200);padding:10px;border-radius:2px;">${url}</p>
+            <p style="font-size:0.8rem;margin-top:10px;">Salin link di atas, lalu tempel di TAB BARU secara manual untuk tes.</p>
+          </div>`;
+      });
+      img.src = url;
+      body.appendChild(img);
+    }else if(ext === "pdf"){
+      window.open(url, "_blank", "noopener");
+      $("previewOverlay").classList.remove("show");
+      return;
+    }else{
+      body.innerHTML = `<p style="padding:50px;text-align:center;color:var(--ink-600);">Pratinjau tidak tersedia untuk tipe file ini (.${ext}). Silakan unduh untuk membukanya.</p>`;
+    }
     $("previewOverlay").classList.add("show");
   }
   $("previewClose").addEventListener("click", () => {
@@ -567,9 +596,19 @@
     }
   });
   $("password").addEventListener("keydown", (e) => { if(e.key === "Enter") $("loginBtn").click(); });
-  $("logoutBtn").addEventListener("click", () => signOut(auth));
+  $("logoutBtn").addEventListener("click", () => {
+    $("logoutModal").classList.add("show");
+  });
+  $("logoutCancel").addEventListener("click", () => {
+    $("logoutModal").classList.remove("show");
+  });
+  $("logoutConfirm").addEventListener("click", () => {
+    $("logoutModal").classList.remove("show");
+    signOut(auth);
+  });
 
   onAuthStateChanged(auth, (user) => {
+    $("sessionCheck").style.display = "none";
     if(user){
       $("loginScreen").style.display = "none";
       $("dashScreen").style.display = "block";
@@ -803,15 +842,23 @@
         const card = document.createElement("div");
         card.className = "gal-admin-item";
         card.innerHTML = `
-          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div style=&quot;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#fbe9e5;color:var(--danger);font-size:0.7rem;text-align:center;padding:8px;&quot;>Gambar gagal dimuat<br>(link tersimpan, coba buka manual)</div>')">
+          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}">
           <div class="meta">
             <p>${v.caption || "<i>Tanpa keterangan</i>"}</p>
             <a class="dl-link" href="${v.url}" target="_blank" rel="noopener" style="font-size:0.76rem;">Buka link langsung</a><br>
             <button class="action-btn danger" data-id="${d.id}" data-caption="${(v.caption||"foto ini").replace(/"/g,'')}" style="margin-top:8px;">Hapus dari situs</button>
           </div>
         `;
-        card.querySelector("img").addEventListener("click", (e) => {
-          showPreview(e.target.dataset.url, "foto.jpg", e.target.dataset.caption);
+        const imgEl = card.querySelector("img");
+        imgEl.addEventListener("error", () => {
+          imgEl.style.display = "none";
+          const errBox = document.createElement("div");
+          errBox.style.cssText = "aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#fbe9e5;color:var(--danger);font-size:0.7rem;text-align:center;padding:8px;";
+          errBox.textContent = "Gambar gagal dimuat di sini — coba \"Buka link langsung\"";
+          imgEl.insertAdjacentElement("afterend", errBox);
+        });
+        imgEl.addEventListener("click", () => {
+          showPreview(imgEl.dataset.url, "foto.jpg", imgEl.dataset.caption);
         });
         grid.appendChild(card);
       });
