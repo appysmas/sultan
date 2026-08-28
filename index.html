@@ -645,7 +645,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  import { getFirestore, initializeFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -658,7 +658,10 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false
+  });
 
   // ---- Catat kunjungan (diam-diam, gagal pun tidak mengganggu tampilan) ----
   (async function logVisit(){

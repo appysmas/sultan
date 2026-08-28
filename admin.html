@@ -267,7 +267,7 @@
     getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
-    getFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+    getFirestore, initializeFirestore, collection, addDoc, getDocs, deleteDoc, doc,
     query, orderBy, limit, serverTimestamp, Timestamp
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
@@ -285,7 +285,10 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+    useFetchStreams: false
+  });
 
   const $ = (id) => document.getElementById(id);
 
