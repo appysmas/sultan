@@ -294,6 +294,7 @@
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("POST", url, true);
+      xhr.timeout = 90000; // 90 detik — jika lebih lama, anggap gagal
       xhr.upload.onprogress = (e) => {
         if(e.lengthComputable && onProgress){
           onProgress(Math.round((e.loaded / e.total) * 100));
@@ -309,6 +310,8 @@
         }
       };
       xhr.onerror = () => reject(new Error("Koneksi gagal saat mengunggah"));
+      xhr.ontimeout = () => reject(new Error("Waktu unggah habis (koneksi terlalu lambat atau terputus). Coba lagi."));
+      xhr.onabort = () => reject(new Error("Unggahan dibatalkan"));
       xhr.send(formData);
     });
   }
