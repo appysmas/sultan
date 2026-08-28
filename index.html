@@ -664,7 +664,7 @@
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
     useFetchStreams: false
-  });
+  }, "default");
 
   // ---- Catat kunjungan (diam-diam, gagal pun tidak mengganggu tampilan) ----
   (async function logVisit(){

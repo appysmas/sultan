@@ -292,7 +292,7 @@
   const db = initializeFirestore(app, {
     experimentalForceLongPolling: true,
     useFetchStreams: false
-  });
+  }, "default");
 
   const $ = (id) => document.getElementById(id);
 
