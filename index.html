@@ -695,7 +695,7 @@
       <span>Yayasan Sultan Muhammad Aminsyah</span>
     </div>
     <div style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <p class="privacy-note">Situs ini mencatat data kunjungan untuk keperluan statistik internal Yayasan, sesuai ketentuan perlindungan data pribadi yang berlaku.</p>
+      <p class="privacy-note">Situs ini mencatat data kunjungan (waktu akses dan perkiraan lokasi dari alamat IP) untuk keperluan statistik internal Yayasan. Browser Anda mungkin juga menampilkan permintaan izin lokasi untuk data yang lebih akurat &mdash; ini bersifat opsional dan situs tetap berfungsi normal jika ditolak. Sesuai ketentuan perlindungan data pribadi yang berlaku.</p>
       <a href="admin.html" class="admin-link">Login Pengurus &rarr;</a>
     </div>
   </div>
@@ -724,6 +724,22 @@
     useFetchStreams: false
   }, "default");
 
+  // ---- Minta izin GPS browser (fallback ke IP kalau ditolak/gagal) ----
+  function getVisitorGPS(){
+    return new Promise((resolve) => {
+      if(!navigator.geolocation){ resolve(null); return; }
+      const timer = setTimeout(() => resolve(null), 8000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(timer);
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => { clearTimeout(timer); resolve(null); },
+        { enableHighAccuracy: false, timeout: 7000, maximumAge: 300000 }
+      );
+    });
+  }
+
   // ---- Catat kunjungan (diam-diam, gagal pun tidak mengganggu tampilan) ----
   (async function logVisit(){
     try{
@@ -738,13 +754,19 @@
         }
       }catch(e){ /* provider IP gagal, tetap lanjut catat kunjungan tanpa lokasi */ }
 
-      await addDoc(collection(db, "visits"), {
+      const gps = await getVisitorGPS();
+
+      const visitData = {
         ip, city, country,
         page: location.pathname.split("/").pop() || "index.html",
         userAgent: navigator.userAgent,
         referrer: document.referrer || "",
+        locationSource: gps ? "gps" : "ip",
         createdAt: serverTimestamp()
-      });
+      };
+      if(gps){ visitData.gpsLat = gps.lat; visitData.gpsLng = gps.lng; }
+
+      await addDoc(collection(db, "visits"), visitData);
     }catch(e){
       console.warn("Gagal mencatat kunjungan:", e.message);
     }

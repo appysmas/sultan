@@ -207,7 +207,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.5-preview-logout-fix</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.6-cloudinary-gps</p>
   </div>
 </div>
 
@@ -409,7 +409,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.5-preview-logout-fix";
+  const BUILD_VERSION = "2026-08-29.6-cloudinary-gps";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -667,10 +667,13 @@
         if(v.ip) ips.add(v.ip);
         if(time && time.toDateString() === todayStr) todayCount++;
         const tr = document.createElement("tr");
+        const locCell = (v.locationSource === "gps" && v.gpsLat != null)
+          ? `<a href="https://www.google.com/maps?q=${v.gpsLat},${v.gpsLng}" target="_blank" rel="noopener">📍 Lihat titik GPS</a>`
+          : `${[v.city, v.country].filter(Boolean).join(", ") || "-"} <span style="color:var(--ink-600);font-size:0.72em;">(perkiraan IP)</span>`;
         tr.innerHTML = `
           <td>${time ? time.toLocaleString("id-ID") : "-"}</td>
           <td>${v.ip || "-"}</td>
-          <td>${[v.city, v.country].filter(Boolean).join(", ") || "-"}</td>
+          <td>${locCell}</td>
           <td>${v.page || "-"}</td>
           <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(v.userAgent||"").replace(/"/g,'')}">${shortUA(v.userAgent)}</td>
         `;
