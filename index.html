@@ -343,6 +343,32 @@
     border:1px dashed var(--line);border-radius:2px;background:#fff;
   }
 
+  /* ---------- DONASI ---------- */
+  .donasi{background:var(--teal-900);color:var(--cream-100);}
+  .donasi .section-head .eyebrow{color:var(--gold-400);}
+  .donasi .section-head h2{color:var(--cream-100);}
+  .donasi .section-head p{color:var(--cream-200);}
+  .don-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+  .don-card{
+    background:var(--teal-800);border:1px solid rgba(250,246,236,0.14);
+    border-radius:2px;padding:26px 24px;
+  }
+  .don-card .don-title{
+    font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;
+    text-transform:uppercase;color:var(--gold-400);margin-bottom:12px;display:block;
+  }
+  .don-card .don-number{
+    font-family:'Amiri',serif;font-size:1.6rem;color:var(--cream-100);
+    letter-spacing:0.03em;margin-bottom:8px;
+  }
+  .don-card .don-holder{font-size:0.88rem;color:var(--cream-200);margin-bottom:4px;}
+  .don-card .don-note{font-size:0.8rem;color:rgba(250,246,236,0.55);margin-top:8px;}
+  .don-empty{
+    grid-column:1/-1;text-align:center;padding:50px 20px;
+    color:var(--cream-200);font-size:0.92rem;border:1px dashed rgba(250,246,236,0.25);
+    border-radius:2px;
+  }
+
   .privacy-note{
     font-size:0.72rem;color:rgba(250,246,236,0.4);max-width:600px;line-height:1.6;
   }
@@ -388,7 +414,7 @@
       <li><a href="#legalitas">Legalitas</a></li>
       <li><a href="#kontak">Kontak</a></li>
     </ul>
-    <a href="#kontak" class="nav-cta">Dukung Kami</a>
+    <a href="#donasi" class="nav-cta">Dukung Kami</a>
     <button class="navtoggle" aria-label="Menu">&#9776;</button>
   </nav>
 </header>
@@ -641,6 +667,19 @@
   </div>
 </section>
 
+<section class="donasi" id="donasi">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Dukung Kami</div>
+      <h2>Salurkan Donasi</h2>
+      <p>Baik zakat, infaq, sedekah, wakaf, maupun hibah, dapat disalurkan melalui rekening resmi Yayasan di bawah ini.</p>
+    </div>
+    <div class="don-grid" id="donGrid">
+      <div class="don-empty" id="donEmpty">Informasi rekening donasi sedang disiapkan. Silakan hubungi kami langsung lewat WhatsApp untuk sementara waktu.</div>
+    </div>
+  </div>
+</section>
+
 <section id="legalitas" style="background:var(--cream-200);">
   <div class="wrap" style="max-width:820px;">
     <div class="section-head" style="margin-bottom:36px;">
@@ -695,7 +734,7 @@
       <span>Yayasan Sultan Muhammad Aminsyah</span>
     </div>
     <div style="margin-top:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <p class="privacy-note">Situs ini mencatat data kunjungan untuk keperluan statistik internal Yayasan.&mdash;. Sesuai ketentuan perlindungan data pribadi yang berlaku.</p>
+      <p class="privacy-note">Situs ini mencatat data kunjungan (waktu akses dan perkiraan lokasi dari alamat IP) untuk keperluan statistik internal Yayasan. Browser Anda mungkin juga menampilkan permintaan izin lokasi untuk data yang lebih akurat &mdash; ini bersifat opsional dan situs tetap berfungsi normal jika ditolak. Sesuai ketentuan perlindungan data pribadi yang berlaku.</p>
       <a href="admin.html" class="admin-link">Login Pengurus &rarr;</a>
     </div>
   </div>
@@ -823,6 +862,33 @@
       });
     }catch(e){
       console.warn("Gagal memuat berita:", e.message);
+    }
+  })();
+
+  // ---- Muat rekening donasi publik ----
+  (async function loadDonasi(){
+    const grid = document.getElementById("donGrid");
+    const empty = document.getElementById("donEmpty");
+    try{
+      const q = query(collection(db, "donasi"), orderBy("addedAt", "desc"));
+      const snap = await getDocs(q);
+      if(snap.empty) return; // biarkan pesan default tampil
+
+      empty.remove();
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "don-card";
+        card.innerHTML = `
+          <span class="don-title">${(d.title||'').replace(/</g,'&lt;')}</span>
+          <div class="don-number">${(d.number||'').replace(/</g,'&lt;')}</div>
+          <div class="don-holder">a.n. ${(d.holder||'').replace(/</g,'&lt;')}</div>
+          ${d.note ? `<div class="don-note">${d.note.replace(/</g,'&lt;')}</div>` : ""}
+        `;
+        grid.appendChild(card);
+      });
+    }catch(e){
+      console.warn("Gagal memuat donasi:", e.message);
     }
   })();
 </script>

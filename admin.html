@@ -207,7 +207,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.6-cloudinary-gps</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.7-donasi-tab</p>
   </div>
 </div>
 
@@ -226,6 +226,7 @@
     <button class="tab-btn" data-tab="inventaris">Inventaris Surat &amp; Dokumen</button>
     <button class="tab-btn" data-tab="galeri">Galeri Foto</button>
     <button class="tab-btn" data-tab="berita">Berita &amp; Liputan</button>
+    <button class="tab-btn" data-tab="donasi">Donasi</button>
     <button class="tab-btn" data-tab="pengaturan">Pengaturan</button>
   </div>
 
@@ -335,7 +336,31 @@
     </div>
   </div>
 
-  <!-- ---- PANEL: PENGATURAN ---- -->
+  <!-- ---- PANEL: DONASI ---- -->
+  <div class="panel" id="panel-donasi">
+    <div class="form-card">
+      <h3>Tambah Rekening / Metode Donasi</h3>
+      <p class="desc" style="font-size:0.82rem;color:var(--ink-600);margin:-8px 0 16px;">Data ini akan tampil di halaman publik, section &ldquo;Dukung Kami&rdquo;. Bisa lebih dari satu (Bank, e-wallet, dll).</p>
+      <div class="form-grid">
+        <div class="field"><label>Nama Bank / E-wallet</label><input type="text" id="donTitle" placeholder="Contoh: Bank Syariah Indonesia (BSI)"></div>
+        <div class="field"><label>Nomor Rekening / Nomor Tujuan</label><input type="text" id="donNumber" placeholder="Contoh: 7123456789"></div>
+        <div class="field"><label>Atas Nama</label><input type="text" id="donHolder" placeholder="Contoh: Yayasan Sultan Muhammad Aminsyah"></div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Catatan (opsional)</label>
+        <input type="text" id="donNote" placeholder="Contoh: Khusus untuk zakat/infaq/wakaf">
+      </div>
+      <button class="btn" id="donAddBtn">Tambah Rekening</button>
+    </div>
+
+    <h3 class="section-title">Daftar Rekening Donasi</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Bank/E-wallet</th><th>Nomor</th><th>Atas Nama</th><th>Catatan</th><th></th></tr></thead>
+        <tbody id="donBody"><tr class="empty-row"><td colspan="5"><div class="loading-row"><div class="spinner"></div>Memuat data&hellip;</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
   <div class="panel" id="panel-pengaturan">
     <div class="form-card" style="max-width:420px;">
       <h3>Ubah Kata Sandi</h3>
@@ -409,7 +434,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.6-cloudinary-gps";
+  const BUILD_VERSION = "2026-08-29.7-donasi-tab";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -630,7 +655,7 @@
       loadDocs();
       loadGalleryAdmin();
       loadNews();
-    }else{
+      loadDonasi();
       $("loginScreen").style.display = "flex";
       $("dashScreen").style.display = "none";
     }
@@ -962,6 +987,78 @@
       await deleteDoc(doc(db, "berita", id));
       toast("Berita dihapus.");
       loadNews();
+    }catch(e){
+      toast("Gagal menghapus: " + e.message, true);
+    }
+  }
+
+  // ---------------- DONASI ----------------
+  $("donAddBtn").addEventListener("click", async () => {
+    const title = $("donTitle").value.trim();
+    const number = $("donNumber").value.trim();
+    const holder = $("donHolder").value.trim();
+    const note = $("donNote").value.trim();
+    if(!title || !number || !holder){ toast("Nama bank, nomor, dan atas nama wajib diisi.", true); return; }
+
+    $("donAddBtn").disabled = true;
+    $("donAddBtn").textContent = "Menyimpan...";
+    try{
+      await withTimeout(
+        addDoc(collection(db, "donasi"), {
+          title, number, holder, note,
+          addedBy: auth.currentUser.email, addedAt: serverTimestamp()
+        }),
+        20000,
+        "Gagal menyimpan (waktu habis). Coba lagi."
+      );
+      toast("Rekening donasi berhasil ditambahkan.");
+      $("donTitle").value = ""; $("donNumber").value = ""; $("donHolder").value = ""; $("donNote").value = "";
+      loadDonasi();
+    }catch(e){
+      toast("Gagal menyimpan: " + e.message, true);
+    }finally{
+      $("donAddBtn").disabled = false;
+      $("donAddBtn").textContent = "Tambah Rekening";
+    }
+  });
+
+  async function loadDonasi(){
+    try{
+      const q = query(collection(db, "donasi"), orderBy("addedAt", "desc"));
+      const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
+      const body = $("donBody");
+      body.innerHTML = "";
+      if(snap.empty){
+        body.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada rekening donasi ditambahkan.</td></tr>`;
+        return;
+      }
+      snap.forEach(d => {
+        const v = d.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${v.title}</td>
+          <td>${v.number}</td>
+          <td>${v.holder}</td>
+          <td>${v.note || "-"}</td>
+          <td><button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button></td>
+        `;
+        body.appendChild(tr);
+      });
+      body.querySelectorAll(".action-btn.danger").forEach(btn => {
+        btn.addEventListener("click", () => deleteDonasi(btn.dataset.id, btn.dataset.title));
+      });
+    }catch(e){
+      $("donBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${friendlyLoadError(e.message)}</td></tr>`;
+    }
+  }
+
+  async function deleteDonasi(id, title){
+    const ok = await askPasswordConfirm(`Hapus rekening "${title}" dari daftar? Masukkan password Anda untuk konfirmasi.`);
+    if(!ok) return;
+    try{
+      await deleteDoc(doc(db, "donasi", id));
+      toast("Rekening donasi dihapus.");
+      loadDonasi();
     }catch(e){
       toast("Gagal menghapus: " + e.message, true);
     }
