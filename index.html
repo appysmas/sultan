@@ -348,9 +348,30 @@
   }
   .admin-link{color:rgba(250,246,236,0.35)!important;text-decoration:none;font-size:0.78rem;}
   .admin-link:hover{color:var(--gold-400)!important;}
+
+  /* ---------- PAGE LOADER ---------- */
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #pageLoader{
+    position:fixed;inset:0;z-index:9999;background:var(--teal-950);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    transition:opacity 0.4s ease, visibility 0.4s ease;
+  }
+  #pageLoader.hide{opacity:0;visibility:hidden;pointer-events:none;}
+  #pageLoader .loader-spinner{
+    width:44px;height:44px;border:3px solid rgba(201,162,39,0.25);
+    border-top-color:var(--gold-500);border-radius:50%;animation:spin 0.7s linear infinite;
+  }
+  #pageLoader .loader-text{
+    font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.14em;
+    text-transform:uppercase;color:var(--cream-200);
+  }
 </style>
 </head>
 <body>
+<div id="pageLoader">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">Memuat halaman&hellip;</div>
+</div>
 
 <header>
   <nav class="wrap">
@@ -782,6 +803,13 @@
       console.warn("Gagal memuat berita:", e.message);
     }
   })();
+</script>
+<script>
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.getElementById("pageLoader").classList.add("hide");
+    }, 300);
+  });
 </script>
 </body>
 </html>

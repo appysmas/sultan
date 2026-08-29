@@ -169,12 +169,25 @@
     .topbar .who span.uid{display:none;}
     .panel{padding:24px 16px;}
   }
+
+  /* ---------- LOADING SPINNER ---------- */
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .spinner{
+    display:inline-block;width:20px;height:20px;
+    border:2.5px solid rgba(201,162,39,0.25);border-top-color:var(--gold-500);
+    border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;
+  }
+  .spinner.big{width:38px;height:38px;border-width:3.5px;}
+  .loading-row{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px;color:var(--ink-600);font-size:0.85rem;}
+  #sessionCheck .spinner{margin-bottom:14px;}
+  #sessionCheck{flex-direction:column;}
 </style>
 </head>
 <body>
 
 <!-- ===================== LOADING (cek sesi) ===================== -->
 <div id="sessionCheck" style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--teal-950);color:var(--cream-200);font-family:'JetBrains Mono',monospace;font-size:0.85rem;">
+  <div class="spinner big"></div>
   Memeriksa sesi&hellip;
 </div>
 
@@ -194,7 +207,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.4-fitur-lengkap</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.5-preview-logout-fix</p>
   </div>
 </div>
 
@@ -227,7 +240,7 @@
     <div class="table-wrap">
       <table>
         <thead><tr><th>Waktu</th><th>Alamat IP</th><th>Lokasi</th><th>Halaman</th><th>Perangkat</th></tr></thead>
-        <tbody id="visitsBody"><tr class="empty-row"><td colspan="5">Memuat data&hellip;</td></tr></tbody>
+        <tbody id="visitsBody"><tr class="empty-row"><td colspan="5"><div class="loading-row"><div class="spinner"></div>Memuat data&hellip;</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -266,7 +279,7 @@
     <div class="table-wrap">
       <table>
         <thead><tr><th>Judul</th><th>Kategori</th><th>No. Surat</th><th>Tanggal</th><th>Berkas</th><th></th></tr></thead>
-        <tbody id="docsBody"><tr class="empty-row"><td colspan="6">Memuat data&hellip;</td></tr></tbody>
+        <tbody id="docsBody"><tr class="empty-row"><td colspan="6"><div class="loading-row"><div class="spinner"></div>Memuat data&hellip;</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -292,7 +305,7 @@
 
     <h3 class="section-title">Foto Tersimpan (klik foto untuk pratinjau)</h3>
     <div class="gal-admin-grid" id="galAdminGrid">
-      <p style="color:var(--ink-600);font-size:0.85rem;">Memuat galeri&hellip;</p>
+      <div class="loading-row"><div class="spinner"></div>Memuat galeri&hellip;</div>
     </div>
   </div>
 
@@ -317,7 +330,7 @@
     <div class="table-wrap">
       <table>
         <thead><tr><th>Judul</th><th>Sumber</th><th>Tanggal</th><th>Link</th><th></th></tr></thead>
-        <tbody id="newsBody"><tr class="empty-row"><td colspan="5">Memuat data&hellip;</td></tr></tbody>
+        <tbody id="newsBody"><tr class="empty-row"><td colspan="5"><div class="loading-row"><div class="spinner"></div>Memuat data&hellip;</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -394,10 +407,9 @@
     messagingSenderId: "111214190041",
     appId: "1:111214190041:web:8d9375c79bc9534baa4dc8"
   };
-  const IMGBB_API_KEY = "3323e00415ea2bdee2148da815e9af3b";
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.4-fitur-lengkap";
+  const BUILD_VERSION = "2026-08-29.5-preview-logout-fix";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -602,9 +614,10 @@
   $("logoutCancel").addEventListener("click", () => {
     $("logoutModal").classList.remove("show");
   });
-  $("logoutConfirm").addEventListener("click", () => {
+  $("logoutConfirm").addEventListener("click", async () => {
     $("logoutModal").classList.remove("show");
-    signOut(auth);
+    await signOut(auth);
+    window.location.href = "index.html";
   });
 
   onAuthStateChanged(auth, (user) => {
@@ -751,15 +764,11 @@
           <td>${v.number || "-"}</td>
           <td>${v.date || "-"}</td>
           <td>
-            <a class="dl-link" href="#" data-url="${v.fileURL}" data-filename="${(v.fileName||"").replace(/"/g,'')}" data-title="${v.title.replace(/"/g,'')}" onclick="return false;">Pratinjau</a>
+            <a class="dl-link" href="${v.fileURL}" target="_blank" rel="noopener">Buka / Pratinjau</a>
             <a class="dl-link" href="${v.fileURL}" target="_blank" rel="noopener">Unduh</a>
           </td>
           <td><button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button></td>
         `;
-        tr.querySelector('a[data-url]').addEventListener("click", (e) => {
-          const t = e.currentTarget;
-          showPreview(t.dataset.url, t.dataset.filename, t.dataset.title);
-        });
         body.appendChild(tr);
       });
       body.querySelectorAll(".action-btn.danger").forEach(btn => {
@@ -792,23 +801,23 @@
     $("galUploadBtn").textContent = "Memproses...";
     setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0);
     try{
-      const fileToUpload = await compressImageIfNeeded(file, 4 * 1024 * 1024, (status) => {
+      const fileToUpload = await compressImageIfNeeded(file, 8 * 1024 * 1024, (status) => {
         $("galUploadBtn").textContent = status;
       });
       $("galUploadBtn").textContent = "Mengunggah...";
       const formData = new FormData();
-      formData.append("image", fileToUpload);
-      const json = await uploadWithProgress(
-        `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+      formData.append("file", fileToUpload);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      const result = await uploadWithProgress(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
         formData,
         (pct) => setProgress("galProgressWrap","galProgressFill","galProgressLabel", pct)
       );
-      if(!json.success) throw new Error(json.error?.message || "Upload ImgBB gagal");
 
       $("galUploadBtn").textContent = "Menyimpan data...";
       await withTimeout(
         addDoc(collection(db, "gallery"), {
-          url: json.data.url, deleteUrl: json.data.delete_url || "", caption,
+          url: result.secure_url, cloudinaryId: result.public_id, caption,
           uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
