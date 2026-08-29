@@ -55,7 +55,7 @@
   }
   nav.wrap{
     display:flex;align-items:center;justify-content:space-between;
-    height:88px;
+    min-height:88px;padding-top:10px;padding-bottom:10px;position:relative;
   }
   .brand{
     display:flex;align-items:center;gap:16px;
@@ -250,7 +250,15 @@
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width:900px){
-    .navlinks{display:none;}
+    .navlinks{
+      display:none;flex-direction:column;gap:0;
+      position:absolute;top:100%;left:0;right:0;
+      background:var(--teal-950);padding:8px 28px 20px;
+      border-top:1px solid rgba(201,162,39,0.2);
+      box-shadow:0 20px 30px rgba(0,0,0,0.25);
+    }
+    .navlinks.open{display:flex;}
+    .navlinks a{padding:13px 0;border-bottom:1px solid rgba(250,246,236,0.08);}
     .navtoggle{display:block;}
     .hero-grid{grid-template-columns:1fr;}
     .about-grid{grid-template-columns:1fr;}
@@ -259,6 +267,15 @@
     .footer-grid{grid-template-columns:1fr;gap:30px;}
     .hero{padding:90px 0 70px;}
     section{padding:70px 0;}
+  }
+
+  @media (max-width:520px){
+    .brand-mark{width:42px;height:42px;}
+    .brand-name{font-size:1.02rem;line-height:1.2;}
+    .brand-name small{font-size:0.58rem;}
+    .brand{gap:10px;}
+    .nav-cta{padding:8px 14px;font-size:0.76rem;}
+    nav.wrap{min-height:70px;}
   }
 
   .brand-mark{width:54px;height:54px;flex:none;border-radius:50%;object-fit:cover;background:#0c2e2b;}
@@ -947,6 +964,23 @@
       document.getElementById("pageLoader").classList.add("hide");
     }, 300);
   });
+
+  // ---- Menu mobile (hamburger) ----
+  const navToggle = document.querySelector(".navtoggle");
+  const navLinksEl = document.querySelector(".navlinks");
+  if(navToggle && navLinksEl){
+    navToggle.addEventListener("click", () => {
+      navLinksEl.classList.toggle("open");
+    });
+    navLinksEl.querySelectorAll("a").forEach(a => {
+      a.addEventListener("click", () => navLinksEl.classList.remove("open"));
+    });
+    document.addEventListener("click", (e) => {
+      if(!navLinksEl.contains(e.target) && !navToggle.contains(e.target)){
+        navLinksEl.classList.remove("open");
+      }
+    });
+  }
 </script>
 </body>
 </html>

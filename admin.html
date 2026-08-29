@@ -215,7 +215,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.10-kegiatan-multifoto</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.11-edit-mobile-nav</p>
   </div>
 </div>
 
@@ -409,6 +409,38 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: EDIT BERITA ===================== -->
+<div class="modal-overlay" id="editNewsModal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3>Edit Berita</h3>
+    <p class="desc">Perbarui informasi berita, lalu simpan.</p>
+    <div class="field"><label>Judul Berita</label><input type="text" id="editNewsTitle"></div>
+    <div class="field"><label>Sumber Media</label><input type="text" id="editNewsSource"></div>
+    <div class="field"><label>Tanggal</label><input type="date" id="editNewsDate"></div>
+    <div class="field" style="margin-bottom:0;"><label>URL Berita</label><input type="url" id="editNewsUrl"></div>
+    <div class="modal-actions">
+      <button class="btn cancel" id="editNewsCancel">Batal</button>
+      <button class="btn" id="editNewsSave" style="background:var(--teal-950);">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EDIT KEGIATAN ===================== -->
+<div class="modal-overlay" id="editKegModal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3>Edit Kegiatan</h3>
+    <p class="desc">Perbarui informasi kegiatan (foto tidak berubah), lalu simpan.</p>
+    <div class="field"><label>Nama Kegiatan</label><input type="text" id="editKegTitle"></div>
+    <div class="field"><label>Tanggal Kegiatan</label><input type="date" id="editKegDate"></div>
+    <div class="field"><label>Lokasi Kegiatan</label><input type="text" id="editKegLocation"></div>
+    <div class="field" style="margin-bottom:0;"><label>Deskripsi</label><input type="text" id="editKegDesc"></div>
+    <div class="modal-actions">
+      <button class="btn cancel" id="editKegCancel">Batal</button>
+      <button class="btn" id="editKegSave" style="background:var(--teal-950);">Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: KONFIRMASI PASSWORD (HAPUS) ===================== -->
 <div class="modal-overlay" id="pwModal">
   <div class="modal-box">
@@ -444,7 +476,7 @@
     reauthenticateWithCredential, EmailAuthProvider, updatePassword
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
   import {
-    initializeFirestore, collection, addDoc, getDocs, deleteDoc, doc,
+    initializeFirestore, collection, addDoc, updateDoc, getDocs, deleteDoc, doc,
     query, orderBy, limit, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
@@ -458,7 +490,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.10-kegiatan-multifoto";
+  const BUILD_VERSION = "2026-08-29.11-edit-mobile-nav";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -963,6 +995,7 @@
             <h4>${(v.title||"").replace(/</g,'&lt;')}</h4>
             <div class="keg-info">${metaLine} &middot; ${photos.length} foto</div>
             ${v.desc ? `<p>${v.desc.replace(/</g,'&lt;')}</p>` : ""}
+            <button class="action-btn" data-id="${d.id}" data-edit="1">Edit</button>
             <button class="action-btn danger" data-id="${d.id}" data-title="${(v.title||'kegiatan ini').replace(/"/g,'')}" style="margin-top:4px;">Hapus Kegiatan</button>
           </div>
         `;
@@ -975,6 +1008,9 @@
       });
       grid.querySelectorAll(".action-btn.danger").forEach(btn => {
         btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id, btn.dataset.title));
+      });
+      grid.querySelectorAll(".action-btn[data-edit]").forEach(btn => {
+        btn.addEventListener("click", () => openEditKeg(btn.dataset.id));
       });
     }catch(e){
       $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${friendlyLoadError(e.message)}</p>`;
@@ -992,6 +1028,45 @@
       toast("Gagal menghapus: " + e.message, true);
     }
   }
+
+  let editKegId = null;
+  async function openEditKeg(id){
+    try{
+      const snap = await getDocs(query(collection(db, "kegiatan")));
+      const target = snap.docs.find(d => d.id === id);
+      if(!target) return;
+      const v = target.data();
+      editKegId = id;
+      $("editKegTitle").value = v.title || "";
+      $("editKegDate").value = v.date || "";
+      $("editKegLocation").value = v.location || "";
+      $("editKegDesc").value = v.desc || "";
+      $("editKegModal").classList.add("show");
+    }catch(e){
+      toast("Gagal memuat data untuk diedit: " + e.message, true);
+    }
+  }
+  $("editKegCancel").addEventListener("click", () => $("editKegModal").classList.remove("show"));
+  $("editKegSave").addEventListener("click", async () => {
+    const title = $("editKegTitle").value.trim();
+    const date = $("editKegDate").value;
+    const location = $("editKegLocation").value.trim();
+    const desc = $("editKegDesc").value.trim();
+    if(!title || !date || !location){ toast("Nama, tanggal, dan lokasi wajib diisi.", true); return; }
+    $("editKegSave").disabled = true;
+    $("editKegSave").textContent = "Menyimpan...";
+    try{
+      await updateDoc(doc(db, "kegiatan", editKegId), { title, date, location, desc });
+      toast("Kegiatan berhasil diperbarui.");
+      $("editKegModal").classList.remove("show");
+      loadGalleryAdmin();
+    }catch(e){
+      toast("Gagal menyimpan: " + e.message, true);
+    }finally{
+      $("editKegSave").disabled = false;
+      $("editKegSave").textContent = "Simpan Perubahan";
+    }
+  });
 
   // ---------------- BERITA ----------------
   $("newsAddBtn").addEventListener("click", async () => {
@@ -1042,12 +1117,18 @@
           <td>${v.source || "-"}</td>
           <td>${v.date || "-"}</td>
           <td><a class="dl-link" href="${v.url}" target="_blank" rel="noopener">Buka Link</a></td>
-          <td><button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button></td>
+          <td>
+            <button class="action-btn" data-id="${d.id}" data-edit="1">Edit</button>
+            <button class="action-btn danger" data-id="${d.id}" data-title="${v.title.replace(/"/g,'')}">Hapus</button>
+          </td>
         `;
         body.appendChild(tr);
       });
       body.querySelectorAll(".action-btn.danger").forEach(btn => {
         btn.addEventListener("click", () => deleteNews(btn.dataset.id, btn.dataset.title));
+      });
+      body.querySelectorAll(".action-btn[data-edit]").forEach(btn => {
+        btn.addEventListener("click", () => openEditNews(btn.dataset.id));
       });
     }catch(e){
       $("newsBody").innerHTML = `<tr class="empty-row"><td colspan="5">Gagal memuat: ${friendlyLoadError(e.message)}</td></tr>`;
@@ -1065,6 +1146,45 @@
       toast("Gagal menghapus: " + e.message, true);
     }
   }
+
+  let editNewsId = null;
+  async function openEditNews(id){
+    try{
+      const snap = await getDocs(query(collection(db, "berita")));
+      const target = snap.docs.find(d => d.id === id);
+      if(!target) return;
+      const v = target.data();
+      editNewsId = id;
+      $("editNewsTitle").value = v.title || "";
+      $("editNewsSource").value = v.source || "";
+      $("editNewsDate").value = v.date || "";
+      $("editNewsUrl").value = v.url || "";
+      $("editNewsModal").classList.add("show");
+    }catch(e){
+      toast("Gagal memuat data untuk diedit: " + e.message, true);
+    }
+  }
+  $("editNewsCancel").addEventListener("click", () => $("editNewsModal").classList.remove("show"));
+  $("editNewsSave").addEventListener("click", async () => {
+    const title = $("editNewsTitle").value.trim();
+    const source = $("editNewsSource").value.trim();
+    const date = $("editNewsDate").value;
+    const url = $("editNewsUrl").value.trim();
+    if(!title || !url){ toast("Judul dan URL wajib diisi.", true); return; }
+    $("editNewsSave").disabled = true;
+    $("editNewsSave").textContent = "Menyimpan...";
+    try{
+      await updateDoc(doc(db, "berita", editNewsId), { title, source, date, url });
+      toast("Berita berhasil diperbarui.");
+      $("editNewsModal").classList.remove("show");
+      loadNews();
+    }catch(e){
+      toast("Gagal menyimpan: " + e.message, true);
+    }finally{
+      $("editNewsSave").disabled = false;
+      $("editNewsSave").textContent = "Simpan Perubahan";
+    }
+  });
 
   // ---------------- DONASI ----------------
   $("donAddBtn").addEventListener("click", async () => {
