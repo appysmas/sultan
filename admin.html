@@ -207,7 +207,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.7-donasi-tab</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.8-storage-calc</p>
   </div>
 </div>
 
@@ -237,6 +237,16 @@
       <div class="stat-card"><b id="statToday">&mdash;</b><span>Kunjungan hari ini</span></div>
       <div class="stat-card"><b id="statUnique">&mdash;</b><span>Perkiraan pengunjung unik (IP)</span></div>
     </div>
+
+    <h3 class="section-title">Perkiraan Storage Cloudinary</h3>
+    <div class="stat-cards" style="margin-bottom:14px;">
+      <div class="stat-card"><b id="statStorage">&mdash;</b><span>Total ukuran file tersimpan</span></div>
+      <div class="stat-card"><b id="statStoragePct">&mdash;</b><span>dari jatah 25 kredit gratis (storage saja)</span></div>
+    </div>
+    <p style="font-size:0.78rem;color:var(--ink-600);margin:0 0 30px;">
+      Perkiraan minimum &mdash; hanya menghitung file yang diunggah setelah fitur ini aktif. Tidak termasuk bandwidth (jumlah file yang "ditonton" pengunjung), karena itu hanya bisa dilihat langsung di dashboard Cloudinary.
+    </p>
+
     <h3 class="section-title">50 Kunjungan Terbaru</h3>
     <div class="table-wrap">
       <table>
@@ -434,7 +444,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.7-donasi-tab";
+  const BUILD_VERSION = "2026-08-29.8-storage-calc";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -656,6 +666,7 @@
       loadGalleryAdmin();
       loadNews();
       loadDonasi();
+      calculateStorageUsage();
       $("loginScreen").style.display = "flex";
       $("dashScreen").style.display = "none";
     }
@@ -719,6 +730,30 @@
     return "Desktop";
   }
 
+  // ---------------- KALKULATOR STORAGE CLOUDINARY ----------------
+  async function calculateStorageUsage(){
+    try{
+      const [docsSnap, galSnap] = await Promise.all([
+        withTimeout(getDocs(collection(db, "documents")), 15000, "TIMEOUT_LOAD"),
+        withTimeout(getDocs(collection(db, "gallery")), 15000, "TIMEOUT_LOAD")
+      ]);
+      let totalBytes = 0;
+      docsSnap.forEach(d => { totalBytes += (d.data().fileSize || 0); });
+      galSnap.forEach(d => { totalBytes += (d.data().fileSize || 0); });
+
+      const totalMB = totalBytes / (1024 * 1024);
+      const totalGB = totalBytes / (1024 * 1024 * 1024);
+      const label = totalGB >= 1 ? `${totalGB.toFixed(2)} GB` : `${totalMB.toFixed(1)} MB`;
+      $("statStorage").textContent = label;
+
+      const pctOfFree = (totalGB / 25) * 100; // 25 kredit gratis = setara 25GB storage jika semua dipakai untuk storage
+      $("statStoragePct").textContent = pctOfFree < 0.1 ? "<0.1%" : pctOfFree.toFixed(1) + "%";
+    }catch(e){
+      $("statStorage").textContent = "-";
+      $("statStoragePct").textContent = "-";
+    }
+  }
+
   // ---------------- INVENTARIS ----------------
   $("docUploadBtn").addEventListener("click", async () => {
     const title = $("docTitle").value.trim();
@@ -755,6 +790,7 @@
         addDoc(collection(db, "documents"), {
           title, category, number, date,
           fileURL: result.secure_url, fileName: fileToUpload.name, cloudinaryId: result.public_id,
+          fileSize: fileToUpload.size,
           uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
@@ -764,6 +800,7 @@
       $("docTitle").value = ""; $("docNumber").value = ""; $("docDate").value = ""; $("docFile").value = "";
       setProgress("docProgressWrap","docProgressFill","docProgressLabel", 0, false);
       loadDocs();
+      calculateStorageUsage();
     }catch(e){
       toast("Gagal mengunggah: " + e.message, true);
       setProgress("docProgressWrap","docProgressFill","docProgressLabel", 0, false);
@@ -845,7 +882,7 @@
       $("galUploadBtn").textContent = "Menyimpan data...";
       await withTimeout(
         addDoc(collection(db, "gallery"), {
-          url: result.secure_url, cloudinaryId: result.public_id, caption,
+          url: result.secure_url, cloudinaryId: result.public_id, fileSize: fileToUpload.size, caption,
           uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
@@ -855,6 +892,7 @@
       $("galCaption").value = ""; $("galFile").value = "";
       setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0, false);
       loadGalleryAdmin();
+      calculateStorageUsage();
     }catch(e){
       toast("Gagal mengunggah: " + e.message, true);
       setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0, false);
