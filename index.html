@@ -296,24 +296,40 @@
     *{transition:none!important;}
   }
 
-  /* ---------- GALERI ---------- */
+  /* ---------- GALERI KEGIATAN ---------- */
   .galeri{background:var(--teal-950);color:var(--cream-100);}
   .galeri .section-head .eyebrow{color:var(--gold-400);}
   .galeri .section-head h2{color:var(--cream-100);}
   .galeri .section-head p{color:var(--cream-200);}
   .gal-grid{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;
   }
   .gal-item{
-    aspect-ratio:4/3;border-radius:2px;overflow:hidden;position:relative;
+    border-radius:2px;overflow:hidden;
     background:var(--teal-800);border:1px solid rgba(250,246,236,0.12);
   }
-  .gal-item img{width:100%;height:100%;object-fit:cover;display:block;}
-  .gal-item .cap{
-    position:absolute;left:0;right:0;bottom:0;padding:10px 12px;
-    background:linear-gradient(to top, rgba(8,33,31,0.85), transparent);
-    font-size:0.78rem;color:var(--cream-100);
+  .gal-item .slideshow{
+    position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--teal-900);
   }
+  .gal-item .slideshow img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    opacity:0;transition:opacity 0.9s ease;
+  }
+  .gal-item .slideshow img.active{opacity:1;}
+  .gal-item .slide-dots{
+    position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:5px;
+  }
+  .gal-item .slide-dots span{
+    width:6px;height:6px;border-radius:50%;background:rgba(250,246,236,0.35);transition:background .3s ease;
+  }
+  .gal-item .slide-dots span.active{background:var(--gold-400);}
+  .gal-item .keg-body{padding:16px 18px;}
+  .gal-item .keg-title{font-family:'Amiri',serif;font-size:1.1rem;color:var(--cream-100);margin:0 0 6px;}
+  .gal-item .keg-meta{
+    font-family:'JetBrains Mono',monospace;font-size:0.7rem;letter-spacing:0.04em;
+    color:var(--gold-400);text-transform:uppercase;margin-bottom:8px;
+  }
+  .gal-item .keg-desc{font-size:0.85rem;color:var(--cream-200);line-height:1.6;margin:0;}
   .gal-empty{
     grid-column:1/-1;text-align:center;padding:50px 20px;
     color:var(--cream-200);font-size:0.92rem;border:1px dashed rgba(250,246,236,0.25);
@@ -811,25 +827,58 @@
     }
   })();
 
-  // ---- Muat galeri publik ----
-  (async function loadGallery(){
+  // ---- Muat galeri kegiatan publik ----
+  (async function loadKegiatan(){
     const grid = document.getElementById("galGrid");
     const empty = document.getElementById("galEmpty");
     try{
-      const q = query(collection(db, "gallery"), orderBy("uploadedAt", "desc"), limit(24));
+      const q = query(collection(db, "kegiatan"), orderBy("uploadedAt", "desc"), limit(24));
       const snap = await getDocs(q);
       if(snap.empty) return; // biarkan pesan default tampil
 
       empty.remove();
       snap.forEach(docSnap => {
         const d = docSnap.data();
+        const photos = d.photos || [];
+        if(photos.length === 0) return;
+
         const item = document.createElement("div");
         item.className = "gal-item";
-        item.innerHTML = `<img src="${d.url}" alt="${(d.caption||'Dokumentasi kegiatan').replace(/"/g,'')}" loading="lazy">${d.caption ? `<div class="cap">${d.caption}</div>` : ""}`;
+
+        const slidesHtml = photos.map((p, i) =>
+          `<img src="${p.url}" alt="${(d.title||'Dokumentasi kegiatan').replace(/"/g,'')}" loading="lazy" class="${i===0 ? 'active' : ''}">`
+        ).join("");
+        const dotsHtml = photos.length > 1
+          ? `<div class="slide-dots">${photos.map((_, i) => `<span class="${i===0 ? 'active' : ''}"></span>`).join("")}</div>`
+          : "";
+        const metaLine = [d.date, d.location].filter(Boolean).join(" &middot; ");
+
+        item.innerHTML = `
+          <div class="slideshow">${slidesHtml}${dotsHtml}</div>
+          <div class="keg-body">
+            <h3 class="keg-title">${(d.title||'').replace(/</g,'&lt;')}</h3>
+            ${metaLine ? `<div class="keg-meta">${metaLine}</div>` : ""}
+            ${d.desc ? `<p class="keg-desc">${d.desc.replace(/</g,'&lt;')}</p>` : ""}
+          </div>
+        `;
         grid.appendChild(item);
+
+        // Slideshow otomatis kalau foto lebih dari 1
+        if(photos.length > 1){
+          let idx = 0;
+          const imgs = item.querySelectorAll(".slideshow img");
+          const dots = item.querySelectorAll(".slide-dots span");
+          setInterval(() => {
+            imgs[idx].classList.remove("active");
+            dots[idx].classList.remove("active");
+            idx = (idx + 1) % imgs.length;
+            imgs[idx].classList.add("active");
+            dots[idx].classList.add("active");
+          }, 3500);
+        }
       });
     }catch(e){
-      console.warn("Gagal memuat galeri:", e.message);
+      console.warn("Gagal memuat galeri kegiatan:", e.message);
     }
   })();
 

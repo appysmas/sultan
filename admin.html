@@ -107,10 +107,18 @@
   a.dl-link:hover{text-decoration:underline;}
 
   .section-title{font-size:1.15rem;color:var(--teal-950);margin:0 0 18px;font-family:'Amiri',serif;}
-  .gal-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+  .gal-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
   .gal-admin-item{border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff;}
-  .gal-admin-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer;}
-  .gal-admin-item .meta{padding:10px 12px;}
+  .gal-admin-item .thumb-strip{display:flex;aspect-ratio:16/9;overflow:hidden;background:var(--cream-200);}
+  .gal-admin-item .thumb-strip img{width:100%;height:100%;object-fit:cover;display:block;flex:1;cursor:pointer;}
+  .gal-admin-item .thumb-strip img + img{border-left:2px solid #fff;}
+  .gal-admin-item .thumb-count{
+    position:relative;flex:none;width:44px;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,33,31,0.75);color:#fff;font-size:0.78rem;font-weight:700;
+  }
+  .gal-admin-item .meta{padding:12px 14px;}
+  .gal-admin-item .meta h4{margin:0 0 4px;font-size:0.98rem;font-family:'Amiri',serif;color:var(--teal-950);}
+  .gal-admin-item .meta .keg-info{font-size:0.75rem;color:var(--ink-600);margin-bottom:6px;}
   .gal-admin-item .meta p{margin:0 0 8px;font-size:0.78rem;color:var(--ink-600);}
 
   .toast{
@@ -207,7 +215,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.9-fix-login-bug</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.10-kegiatan-multifoto</p>
   </div>
 </div>
 
@@ -298,25 +306,31 @@
   <!-- ---- PANEL: GALERI ---- -->
   <div class="panel" id="panel-galeri">
     <div class="form-card">
-      <h3>Unggah Foto Kegiatan</h3>
-      <p class="desc" style="font-size:0.82rem;color:var(--ink-600);margin:-8px 0 16px;">Foto yang diunggah di sini otomatis tampil di halaman publik, section &ldquo;Galeri Kegiatan&rdquo;.</p>
+      <h3>Tambah Kegiatan Baru</h3>
+      <p class="desc" style="font-size:0.82rem;color:var(--ink-600);margin:-8px 0 16px;">Pilih beberapa foto sekaligus untuk satu kegiatan &mdash; otomatis jadi slideshow di halaman publik kalau lebih dari satu foto.</p>
       <div class="form-grid">
-        <div class="field" style="grid-column:1/-1;"><label>Keterangan Foto</label><input type="text" id="galCaption" placeholder="Contoh: Pembagian bantuan pangan, Agustus 2026"></div>
+        <div class="field"><label>Nama Kegiatan <span style="color:var(--danger);">*</span></label><input type="text" id="kegTitle" placeholder="Contoh: Pembagian Bantuan Pangan"></div>
+        <div class="field"><label>Tanggal Kegiatan <span style="color:var(--danger);">*</span></label><input type="date" id="kegDate"></div>
+        <div class="field"><label>Lokasi Kegiatan <span style="color:var(--danger);">*</span></label><input type="text" id="kegLocation" placeholder="Contoh: Desa Surien, Banda Aceh"></div>
       </div>
       <div class="field" style="margin-bottom:16px;">
-        <label>Pilih Gambar</label>
-        <input type="file" id="galFile" accept="image/*">
+        <label>Deskripsi (opsional)</label>
+        <input type="text" id="kegDesc" placeholder="Ceritakan singkat kegiatan ini...">
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Pilih Foto (bisa lebih dari satu)</label>
+        <input type="file" id="kegFiles" accept="image/*" multiple>
       </div>
       <div class="progress-wrap" id="galProgressWrap">
         <div class="progress-track"><div class="progress-fill" id="galProgressFill"></div></div>
         <span class="progress-label" id="galProgressLabel">0%</span>
       </div>
-      <button class="btn" id="galUploadBtn">Unggah Foto</button>
+      <button class="btn" id="galUploadBtn">Simpan Kegiatan</button>
     </div>
 
-    <h3 class="section-title">Foto Tersimpan (klik foto untuk pratinjau)</h3>
+    <h3 class="section-title">Daftar Kegiatan</h3>
     <div class="gal-admin-grid" id="galAdminGrid">
-      <div class="loading-row"><div class="spinner"></div>Memuat galeri&hellip;</div>
+      <div class="loading-row"><div class="spinner"></div>Memuat kegiatan&hellip;</div>
     </div>
   </div>
 
@@ -444,7 +458,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.9-fix-login-bug";
+  const BUILD_VERSION = "2026-08-29.10-kegiatan-multifoto";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -736,7 +750,7 @@
     try{
       const [docsSnap, galSnap] = await Promise.all([
         withTimeout(getDocs(collection(db, "documents")), 15000, "TIMEOUT_LOAD"),
-        withTimeout(getDocs(collection(db, "gallery")), 15000, "TIMEOUT_LOAD")
+        withTimeout(getDocs(collection(db, "kegiatan")), 15000, "TIMEOUT_LOAD")
       ]);
       let totalBytes = 0;
       docsSnap.forEach(d => { totalBytes += (d.data().fileSize || 0); });
@@ -857,40 +871,56 @@
     }
   }
 
-  // ---------------- GALERI ----------------
+  // ---------------- GALERI KEGIATAN ----------------
   $("galUploadBtn").addEventListener("click", async () => {
-    const caption = $("galCaption").value.trim();
-    const file = $("galFile").files[0];
-    if(!file){ toast("Pilih gambar terlebih dahulu.", true); return; }
+    const title = $("kegTitle").value.trim();
+    const date = $("kegDate").value;
+    const location = $("kegLocation").value.trim();
+    const desc = $("kegDesc").value.trim();
+    const files = Array.from($("kegFiles").files);
+
+    if(!title || !date || !location){ toast("Nama, tanggal, dan lokasi kegiatan wajib diisi.", true); return; }
+    if(files.length === 0){ toast("Pilih minimal satu foto.", true); return; }
 
     $("galUploadBtn").disabled = true;
-    $("galUploadBtn").textContent = "Memproses...";
     setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0);
     try{
-      const fileToUpload = await compressImageIfNeeded(file, 8 * 1024 * 1024, (status) => {
-        $("galUploadBtn").textContent = status;
-      });
-      $("galUploadBtn").textContent = "Mengunggah...";
-      const formData = new FormData();
-      formData.append("file", fileToUpload);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      const result = await uploadWithProgress(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
-        formData,
-        (pct) => setProgress("galProgressWrap","galProgressFill","galProgressLabel", pct)
-      );
+      const photos = [];
+      let totalSize = 0;
+
+      for(let i = 0; i < files.length; i++){
+        $("galUploadBtn").textContent = `Memproses foto ${i+1} dari ${files.length}...`;
+        const fileToUpload = await compressImageIfNeeded(files[i], 8 * 1024 * 1024, (status) => {
+          $("galUploadBtn").textContent = `Foto ${i+1}/${files.length}: ${status}`;
+        });
+
+        $("galUploadBtn").textContent = `Mengunggah foto ${i+1} dari ${files.length}...`;
+        const formData = new FormData();
+        formData.append("file", fileToUpload);
+        formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+        const result = await uploadWithProgress(
+          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
+          formData,
+          (pct) => {
+            const overall = Math.round(((i + pct/100) / files.length) * 100);
+            setProgress("galProgressWrap","galProgressFill","galProgressLabel", overall);
+          }
+        );
+        photos.push({ url: result.secure_url, cloudinaryId: result.public_id });
+        totalSize += fileToUpload.size;
+      }
 
       $("galUploadBtn").textContent = "Menyimpan data...";
       await withTimeout(
-        addDoc(collection(db, "gallery"), {
-          url: result.secure_url, cloudinaryId: result.public_id, fileSize: fileToUpload.size, caption,
+        addDoc(collection(db, "kegiatan"), {
+          title, date, location, desc, photos, fileSize: totalSize,
           uploadedBy: auth.currentUser.email, uploadedAt: serverTimestamp()
         }),
         20000,
         "Foto berhasil terunggah, tapi gagal menyimpan data ke database (waktu habis)."
       );
-      toast("Foto berhasil diunggah — akan tampil di section Galeri situs publik.");
-      $("galCaption").value = ""; $("galFile").value = "";
+      toast(`Kegiatan berhasil disimpan dengan ${photos.length} foto — akan tampil di section Galeri situs publik.`);
+      $("kegTitle").value = ""; $("kegDate").value = ""; $("kegLocation").value = ""; $("kegDesc").value = ""; $("kegFiles").value = "";
       setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0, false);
       loadGalleryAdmin();
       calculateStorageUsage();
@@ -899,59 +929,64 @@
       setProgress("galProgressWrap","galProgressFill","galProgressLabel", 0, false);
     }finally{
       $("galUploadBtn").disabled = false;
-      $("galUploadBtn").textContent = "Unggah Foto";
+      $("galUploadBtn").textContent = "Simpan Kegiatan";
     }
   });
 
   async function loadGalleryAdmin(){
     try{
-      const q = query(collection(db, "gallery"), orderBy("uploadedAt", "desc"));
+      const q = query(collection(db, "kegiatan"), orderBy("uploadedAt", "desc"));
       const snap = await withTimeout(getDocs(q), 15000, "TIMEOUT_LOAD");
       const grid = $("galAdminGrid");
       grid.innerHTML = "";
       if(snap.empty){
-        grid.innerHTML = `<p style="color:var(--ink-600);font-size:0.85rem;">Belum ada foto.</p>`;
+        grid.innerHTML = `<p style="color:var(--ink-600);font-size:0.85rem;">Belum ada kegiatan ditambahkan.</p>`;
         return;
       }
       snap.forEach(d => {
         const v = d.data();
+        const photos = v.photos || [];
         const card = document.createElement("div");
         card.className = "gal-admin-item";
+
+        const visibleThumbs = photos.slice(0, 3);
+        const extraCount = photos.length - visibleThumbs.length;
+        const thumbsHtml = visibleThumbs.map((p, idx) =>
+          `<img src="${p.url}" alt="${(v.title||"").replace(/"/g,'')}" data-idx="${idx}">`
+        ).join("") + (extraCount > 0 ? `<div class="thumb-count">+${extraCount}</div>` : "");
+
+        const metaLine = [v.date, v.location].filter(Boolean).join(" &middot; ");
+
         card.innerHTML = `
-          <img src="${v.url}" alt="${(v.caption||"").replace(/"/g,'')}" data-url="${v.url}" data-caption="${(v.caption||"Foto galeri").replace(/"/g,'')}">
+          <div class="thumb-strip">${thumbsHtml}</div>
           <div class="meta">
-            <p>${v.caption || "<i>Tanpa keterangan</i>"}</p>
-            <a class="dl-link" href="${v.url}" target="_blank" rel="noopener" style="font-size:0.76rem;">Buka link langsung</a><br>
-            <button class="action-btn danger" data-id="${d.id}" data-caption="${(v.caption||"foto ini").replace(/"/g,'')}" style="margin-top:8px;">Hapus dari situs</button>
+            <h4>${(v.title||"").replace(/</g,'&lt;')}</h4>
+            <div class="keg-info">${metaLine} &middot; ${photos.length} foto</div>
+            ${v.desc ? `<p>${v.desc.replace(/</g,'&lt;')}</p>` : ""}
+            <button class="action-btn danger" data-id="${d.id}" data-title="${(v.title||'kegiatan ini').replace(/"/g,'')}" style="margin-top:4px;">Hapus Kegiatan</button>
           </div>
         `;
-        const imgEl = card.querySelector("img");
-        imgEl.addEventListener("error", () => {
-          imgEl.style.display = "none";
-          const errBox = document.createElement("div");
-          errBox.style.cssText = "aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:#fbe9e5;color:var(--danger);font-size:0.7rem;text-align:center;padding:8px;";
-          errBox.textContent = "Gambar gagal dimuat di sini — coba \"Buka link langsung\"";
-          imgEl.insertAdjacentElement("afterend", errBox);
-        });
-        imgEl.addEventListener("click", () => {
-          showPreview(imgEl.dataset.url, "foto.jpg", imgEl.dataset.caption);
+        card.querySelectorAll(".thumb-strip img").forEach((imgEl, idx) => {
+          imgEl.addEventListener("click", () => {
+            showPreview(photos[idx].url, "foto.jpg", v.title);
+          });
         });
         grid.appendChild(card);
       });
       grid.querySelectorAll(".action-btn.danger").forEach(btn => {
-        btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id, btn.dataset.caption));
+        btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id, btn.dataset.title));
       });
     }catch(e){
       $("galAdminGrid").innerHTML = `<p style="color:var(--danger);font-size:0.85rem;">Gagal memuat: ${friendlyLoadError(e.message)}</p>`;
     }
   }
 
-  async function deleteGalleryItem(id, caption){
-    const ok = await askPasswordConfirm(`Hapus foto "${caption}" dari galeri situs? Masukkan password Anda untuk konfirmasi.`);
+  async function deleteGalleryItem(id, title){
+    const ok = await askPasswordConfirm(`Hapus kegiatan "${title}" beserta semua fotonya dari situs? Masukkan password Anda untuk konfirmasi.`);
     if(!ok) return;
     try{
-      await deleteDoc(doc(db, "gallery", id));
-      toast("Foto dihapus dari situs.");
+      await deleteDoc(doc(db, "kegiatan", id));
+      toast("Kegiatan dihapus dari situs.");
       loadGalleryAdmin();
     }catch(e){
       toast("Gagal menghapus: " + e.message, true);
