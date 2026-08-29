@@ -207,7 +207,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
     </div>
     <button class="btn" id="loginBtn">Masuk</button>
-    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.8-storage-calc</p>
+    <p style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#c4bca0;margin:20px 0 0;">build: 2026-08-29.9-fix-login-bug</p>
   </div>
 </div>
 
@@ -444,7 +444,7 @@
   };
   const CLOUDINARY_CLOUD_NAME = "g12veegm";
   const CLOUDINARY_UPLOAD_PRESET = "x0qbubln";
-  const BUILD_VERSION = "2026-08-29.8-storage-calc";
+  const BUILD_VERSION = "2026-08-29.9-fix-login-bug";
   console.log("Admin build:", BUILD_VERSION);
 
   const app = initializeApp(firebaseConfig);
@@ -667,6 +667,7 @@
       loadNews();
       loadDonasi();
       calculateStorageUsage();
+    }else{
       $("loginScreen").style.display = "flex";
       $("dashScreen").style.display = "none";
     }
